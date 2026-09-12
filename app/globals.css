@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gov-50: #eff6ff;
+  --color-gov-600: #2563eb;
+  --color-gov-700: #1d4ed8;
+  --color-gov-800: #1e40af;
+  --color-gov-900: #1e3a8a;
+  --color-gov-50: #f0fdf4;
+  --color-gov-green-600: #16a34a;
+  --color-gov-green-700: #15803d;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--color-gov-50);
+  color: var(--color-gov-900);
+}
