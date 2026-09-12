@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppProvider } from "@/store/context";
 
 export const metadata: Metadata = {
   title: "SPMB JABAR — Satu NISN, Satu Data, Satu Layanan",
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </nav>
         </header>
-        <main className="mx-auto max-w-6xl p-4">{children}</main>
+        <main className="mx-auto max-w-6xl p-4">
+          <AppProvider>{children}</AppProvider>
+        </main>
         <footer className="bg-gov-900 text-white text-center text-sm p-4">
           © {new Date().getFullYear()} Pemerintah Provinsi Jawa Barat — SPMB Terintegrasi (Prototipe)
         </footer>
