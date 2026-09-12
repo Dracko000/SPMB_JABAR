@@ -101,7 +101,10 @@ export const daftarkan = (
   const next = deepClone(state);
   const sekolah = next.sekolah.find((s) => s.npsn === sekolahNpsn);
   if (!sekolah) return state;
-  if (!sekolah.pendaftar.includes(nisn)) sekolah.pendaftar.push(nisn);
+  // Sudah terdaftar di sekolah ini: tindakan idempoten, jangan kurangi kuota
+  // atau catat pendaftaran lagi (cegah kehilangan kursi palsu).
+  if (sekolah.pendaftar.includes(nisn)) return state;
+  sekolah.pendaftar.push(nisn);
   if (sekolah.kuota[jalurId] !== undefined) {
     sekolah.kuota[jalurId] = clampMin0(sekolah.kuota[jalurId] - 1);
   }
