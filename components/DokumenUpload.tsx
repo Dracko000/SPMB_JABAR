@@ -15,13 +15,20 @@ interface DokumenUploadProps {
  */
 const tanpaAwalan = ['Berdomisili', 'Usia', 'Warga', 'Prestasi akademik'];
 
-const dokumenWajib = (jalur: Jalur): string[] => {
+/** Daftar slot dokumen wajib untuk sebuah jalur; dipakai juga oleh Wizard (gate) dan tes. */
+export const dokumenWajib = (jalur: Jalur): string[] => {
   const dariJalur = jalur.persyaratan.filter(
     (p) => !tanpaAwalan.some((awal) => p.startsWith(awal))
   );
   const unik = [...new Set(['Bukti identitas (KK atau akta kelahiran)', ...dariJalur])];
   return unik;
 };
+
+/** Gate kelengkapan: semua slot dokumen wajib jalur sudah punya berkas. Dipakai Wizard & tes. */
+export const dokumenLengkap = (
+  jalur: Jalur,
+  dokumen: Record<string, { file?: string; status?: string }>
+): boolean => dokumenWajib(jalur).every((d) => dokumen[d]?.file);
 
 /** Langkah 3: unggah dokumen persyaratan jalur. Input file hanya simulasi. */
 export default function DokumenUpload({ jalur, dokumen, onTambah }: DokumenUploadProps) {

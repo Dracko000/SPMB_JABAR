@@ -78,6 +78,17 @@ export default function RingkasanPendaftaran({
         Dengan menekan tombol Kirim, Anda menyatakan data yang diisi benar dan dokumen yang
         dilampirkan sesuai dengan persyaratan jalur pendaftaran.
       </p>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={Object.keys(dokumen).length === 0}
+          className="rounded-lg bg-gov-600 px-5 py-2 font-semibold text-white transition enabled:hover:bg-gov-700 disabled:opacity-40"
+        >
+          Kirim Pendaftaran
+        </button>
+      </div>
     </div>
   );
 }

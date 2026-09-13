@@ -8,7 +8,7 @@ import { formatTanggal } from '@/lib/format';
 import type { Jalur, Sekolah } from '@/types';
 import JalurSelect from './JalurSelect';
 import SekolahSelect from './SekolahSelect';
-import DokumenUpload from './DokumenUpload';
+import DokumenUpload, { dokumenLengkap } from './DokumenUpload';
 import RingkasanPendaftaran from './RingkasanPendaftaran';
 
 type Langkah = 'jalur' | 'sekolah' | 'dokumen' | 'ringkasan';
@@ -42,6 +42,14 @@ export default function Wizard({ nisn }: { nisn: string }) {
   const [sekolah, setSekolah] = useState<Sekolah | null>(null);
   const [dokumen, setDokumen] = useState<Record<string, { file?: string; status?: string }>>({});
   const [selesai, setSelesai] = useState(false);
+
+  const setJalur = (id: string | null) => {
+    if (id !== jalurId) {
+      setJalurId(id);
+      setSekolah(null); // sekolah bergantung jalur; pastikan tidak bocor antar jalur
+    }
+    setDokumen({}); // dokumen wajib beda antar jalur — usir berkas lama
+  };
 
   const jalurTerpilih = jalurId
     ? (state.jalur.find((j) => j.id === jalurId) ?? null)
@@ -121,12 +129,12 @@ export default function Wizard({ nisn }: { nisn: string }) {
   const langkahSelesai = (l: Langkah): boolean => {
     if (l === 'jalur') return !!jalurId;
     if (l === 'sekolah') return !!sekolah;
-    if (l === 'dokumen') return Object.keys(dokumen).length > 0;
+    if (l === 'dokumen' && jalurTerpilih) return dokumenLengkap(jalurTerpilih, dokumen);
     return false;
   };
 
-  const handleSubmit = () => {
-    if (!jalurTerpilih || !sekolah) return;
+  const terima = () => {
+    if (!jalurTerpilih || !sekolah || !dokumenLengkap(jalurTerpilih, dokumen)) return;
     daftarkan(nisn, sekolah.npsn, jalurTerpilih.id, dokumen);
     setSelesai(true);
   };
@@ -167,7 +175,7 @@ export default function Wizard({ nisn }: { nisn: string }) {
         <p className="text-xs font-semibold uppercase tracking-wide text-gov-700">{NOMOR[langkah]}</p>
 
         {langkah === 'jalur' && (
-          <JalurSelect daftar={aktif} terpilih={jalurId} onPilih={setJalurId} />
+          <JalurSelect daftar={aktif} terpilih={jalurId} onPilih={setJalur} />
         )}
         {langkah === 'sekolah' && (
           <SekolahSelect
@@ -187,7 +195,7 @@ export default function Wizard({ nisn }: { nisn: string }) {
             jalur={jalurTerpilih}
             sekolah={sekolah}
             dokumen={dokumen}
-            onSubmit={handleSubmit}
+            onSubmit={terima}
           />
         )}
 
