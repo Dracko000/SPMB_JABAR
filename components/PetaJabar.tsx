@@ -33,9 +33,30 @@ const KOORDINAT: Record<string, { lat: number; lng: number }> = {
   'Kabupaten Purwakarta': { lat: -6.55, lng: 107.44 },
 };
 
-const VERTEX_JABAR: string = [
-  '106.9,-6.25 106.7,-6.55 106.9,-6.8 107.05,-7.05 106.95,-7.2 107.15,-7.4 107.45,-7.28 107.6,-7.3 107.88,-7.28 108.42,-7.5 108.7,-7.42 108.68,-6.95 108.5,-6.6 108.1,-6.45 107.9,-6.18 107.5,-6.12 107.2,-6.05 106.95,-6.05',
-].join('');
+/**
+ * Kontur garis luar Jawa Barat (lat,lng) — titik perkiraan, satu proyeksi
+ * `kePiksel` dipakai untuk outline dan lingkaran kabupaten/kota.
+ */
+const GARIS_JABAR: { lat: number; lng: number }[] = [
+  { lat: -6.25, lng: 106.9 },
+  { lat: -6.55, lng: 106.7 },
+  { lat: -6.8, lng: 106.9 },
+  { lat: -7.05, lng: 107.05 },
+  { lat: -7.2, lng: 106.95 },
+  { lat: -7.4, lng: 107.15 },
+  { lat: -7.28, lng: 107.45 },
+  { lat: -7.3, lng: 107.6 },
+  { lat: -7.28, lng: 107.88 },
+  { lat: -7.5, lng: 108.42 },
+  { lat: -7.42, lng: 108.7 },
+  { lat: -6.95, lng: 108.68 },
+  { lat: -6.6, lng: 108.5 },
+  { lat: -6.45, lng: 108.1 },
+  { lat: -6.18, lng: 107.9 },
+  { lat: -6.12, lng: 107.5 },
+  { lat: -6.05, lng: 107.2 },
+  { lat: -6.05, lng: 106.95 },
+];
 
 const WIDTH = 550;
 const HEIGHT = 650;
@@ -48,13 +69,19 @@ const BOUNDS: Record<'minLat' | 'maxLat' | 'minLng' | 'maxLng', number> = {
   maxLat: -6.0,
 };
 
-/** Transformasi linier lat/lng -> piksel SVG. Tanggal ditambahkan agar konsisten. */
+/** Transformasi linier lat/lng -> piksel SVG. */
 const kePiksel = (lat: number, lng: number): { x: number; y: number } => {
   const x = PADDING + ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * (WIDTH - 2 * PADDING);
   const y =
     PADDING + ((BOUNDS.maxLat - lat) / (BOUNDS.maxLat - BOUNDS.minLat)) * (HEIGHT - 2 * PADDING);
   return { x, y };
 };
+
+/** Outline dan lambang kabupaten/kota diproyeksi lewat satu fungsi yang sama. */
+const VERTEX_JABAR: string = GARIS_JABAR.map(({ lat, lng }) => {
+  const { x, y } = kePiksel(lat, lng);
+  return `${x.toFixed(1)},${y.toFixed(1)}`;
+}).join(' ');
 
 const TITIK: Titik[] = KABUPATEN_KOTA.map((nama) => {
   const k = KOORDINAT[nama];

@@ -23,12 +23,15 @@ const totalKuotaKab = (daftar: Sekolah[]): number =>
  */
 export default function DashboardKabupatenPage() {
   const { state } = useApp();
+  // Inisialisasi malas: tidak set state saat render. Nilai tak dikenal dinormalisasi
+  // ke wilayah pertama secara turunan (`kabkotaAktif`) tanpa menulis ulang state.
   const [kabkota, setKabkota] = useState<string>(KABUPATEN_KOTA[0]);
+  const kabkotaAktif = KABUPATEN_KOTA.includes(kabkota) ? kabkota : KABUPATEN_KOTA[0];
 
   const { sekolah, pendaftaran } = state;
   const sekolahDiKab = useMemo(
-    () => sekolah.filter((s) => s.kabkota === kabkota),
-    [sekolah, kabkota]
+    () => sekolah.filter((s) => s.kabkota === kabkotaAktif),
+    [sekolah, kabkotaAktif]
   );
 
   const jumlahPendaftarKab = useMemo(() => {
@@ -53,15 +56,13 @@ export default function DashboardKabupatenPage() {
     return jumlah === 0 ? 0 : Math.round((setuju / jumlah) * 100);
   }, [sekolahDiKab, pendaftaran]);
 
-  if (kabkota && !KABUPATEN_KOTA.includes(kabkota)) setKabkota(KABUPATEN_KOTA[0]);
-
   return (
     <div className="py-6">
       <h1 className="text-2xl font-bold text-gov-800">Dashboard Kabupaten/Kota</h1>
       <label className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gov-700">
         Kabupaten/Kota:
         <select
-          value={kabkota}
+          value={kabkotaAktif}
           onChange={(e) => setKabkota(e.target.value)}
           className="rounded-lg border border-gov-600/40 bg-white px-3 py-1.5 font-medium text-gov-800 focus:border-gov-600 focus:outline-none"
         >
@@ -76,14 +77,14 @@ export default function DashboardKabupatenPage() {
         <DashboardKpi label="Total Kuota" value={kuotaKab} />
         <DashboardKpi label="Pendaftar" value={jumlahPendaftarKab} />
         <DashboardKpi label="% Verifikasi Setuju" value={`${verifikasiKab}%`} formatValue={false} />
-        <DashboardKpi label="Wilayah" value={kabkota} formatValue={false} />
+        <DashboardKpi label="Wilayah" value={kabkotaAktif} formatValue={false} />
       </section>
 
       <section className="mt-6 rounded-xl bg-white p-4 shadow">
-        <h2 className="text-lg font-bold text-gov-800">Sekolah di {kabkota}</h2>
+        <h2 className="text-lg font-bold text-gov-800">Sekolah di {kabkotaAktif}</h2>
         {sekolahDiKab.length === 0 ? (
           <p className="mt-4 text-sm text-gov-700">
-            Tidak ada sekolah pada wilayah ini. Belum tersedia data sekolah untuk {kabkota}.
+            Tidak ada sekolah pada wilayah ini. Belum tersedia data sekolah untuk {kabkotaAktif}.
           </p>
         ) : (
           <div className="mt-3 overflow-x-auto">

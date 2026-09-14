@@ -47,11 +47,15 @@ export default function DashboardProvinsiPage() {
   const verified = peserta.filter((p) => p.dataStatus === 'Terverifikasi').length;
   const pctTerverifikasi = peserta.length === 0 ? 0 : Math.round((verified / peserta.length) * 100);
 
-  const hariIni = new Date().toISOString().slice(0, 10);
+  // Hari ini dalam WIB (UTC+7). Tanggal pendaftaran disimpan via
+  // `new Date().toISOString()` (UTC), jadi pembanding keduanya dipatok ke WIB
+  // agar konsisten dengan zona waktu sekolah/pendaftar.
+  const hariIniWib = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
   const pendaftarHariIni = daftarNISN.filter((n) => {
     const t = pendaftaran[n]?.tanggal ?? '';
-    return t.slice(0, 10) === hariIni;
+    return t.slice(0, 10) === hariIniWib;
   }).length;
+  const hariIni = hariIniWib;
 
   const perKabkota: Record<string, number> = Object.fromEntries(
     KABUPATEN_KOTA.map((k) => [k, 0])
@@ -87,7 +91,7 @@ export default function DashboardProvinsiPage() {
         <DashboardKpi label="% Data Terverifikasi" value={`${pctTerverifikasi}%`} formatValue={false} icon={<Ikon>✅</Ikon>}
           delta={`${verified} dari ${peserta.length} peserta`} deltaTone={pctTerverifikasi >= 70 ? 'baik' : 'naik'} />
         <DashboardKpi label="Pendaftar Hari Ini" value={pendaftarHariIni} icon={<Ikon>📅</Ikon>}
-          delta="Berdasarkan tanggal pendaftaran" />
+          delta="Tanggal pendaftaran (WIB)" />
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
