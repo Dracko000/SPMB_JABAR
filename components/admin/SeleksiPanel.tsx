@@ -20,20 +20,34 @@ const prestasiDariNisn = (nisn: string): number => {
   return h % 101;
 };
 
+interface RingkasanSeleksi {
+  /** Jumlah pendaftar (status setuju) yang benar-benar dibawa ke mesin seleksi. */
+  total: number;
+  /** Jumlah keputusan yang ditulis ke store (`Object.keys(hasil).length`). */
+  diproses: number;
+  diterima: number;
+}
+
 /**
- * Panel admin: jalankan seleksi untuk semua pendaftaran aktif di store.
+ * Panel admin: jalankan seleksi untuk semua pendaftaran berstatus `setuju`.
  * Bangun daftar pendaftar → `jalankanSeleksi` → tulis hasil via `setSeleksi`
  * (nilai/prestasi/jarak diturunkan deterministik dari NISN agar realistis).
+ *
+ * Ringkasan dihitung dari input nyata (`pendaftar.length`), bukan dari
+ * `Object.keys(hasil)` — sehingga tidak pernah tampak "semua diputuskan"
+ * padahal tidak ada yang diproses.
  */
 export default function SeleksiPanel() {
   const { state, setSeleksi } = useApp();
-  const [terakhir, setTerakhir] = useState<{ diterima: number; tidakDiterima: number } | null>(null);
   const [berjalan, setBerjalan] = useState(false);
+  const [ringkasan, setRingkasan] = useState<RingkasanSeleksi | null>(null);
 
-  const jumlahPendaftaran = Object.keys(state.pendaftaran).length;
+  const jumlahPendaftarSetuju = Object.values(state.pendaftaran).filter(
+    (p) => p.status === 'setuju'
+  ).length;
 
   const jalankan = () => {
-    if (jumlahPendaftaran === 0) return;
+    if (jumlahPendaftarSetuju === 0) return;
     setBerjalan(true);
 
     const pendaftar: PendaftarSeleksi[] = Object.entries(state.pendaftaran)
@@ -54,9 +68,17 @@ export default function SeleksiPanel() {
       if (keputusan === 'diterima') diterima++;
       setSeleksi(nisn, keputusan);
     }
-    setTerakhir({ diterima, tidakDiterima: Object.keys(hasil).length - diterima });
+    setRingkasan({
+      total: pendaftar.length,
+      diproses: Object.keys(hasil).length,
+      diterima,
+    });
     setBerjalan(false);
   };
+
+  // Ringkasan lama basi bila store di-reset (hasilSeleksi dikosongkan) — jangan tampilkan.
+  const ringkasanTampil =
+    ringkasan && Object.keys(state.hasilSeleksi).length > 0 ? ringkasan : null;
 
   return (
     <section>
@@ -68,43 +90,47 @@ export default function SeleksiPanel() {
 
       <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow">
         <p className="text-sm text-gov-900">
-          Jumlah pendaftaran tercatat:{' '}
-          <span className="font-semibold">{formatAngka(jumlahPendaftaran)}</span>{' '}
+          Pendaftar siap diseleksi (status Setuju):{' '}
+          <span className="font-semibold">{formatAngka(jumlahPendaftarSetuju)}</span>{' '}
           <span className="text-gov-700">
-            (
-            {
-              Object.values(state.pendaftaran).filter((p) => p.status === 'setuju').length
-            }{' '}
-            disetujui)
+            dari {formatAngka(Object.keys(state.pendaftaran).length)} pendaftaran tercatat
           </span>
         </p>
         <button
           type="button"
-          disabled={jumlahPendaftaran === 0 || berjalan}
+          disabled={jumlahPendaftarSetuju === 0 || berjalan}
           onClick={jalankan}
           className="mt-3 rounded-lg bg-gov-600 px-5 py-2 font-semibold text-white transition enabled:hover:bg-gov-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {berjalan ? 'Memproses…' : 'Jalankan Seleksi'}
         </button>
-        {jumlahPendaftaran === 0 && (
+        {jumlahPendaftarSetuju === 0 && (
           <p className="mt-2 text-sm text-amber-700">
-            Belum ada pendaftaran. Sebelum menjalankan seleksi, daftarkan peserta lewat halaman
-            pendaftaran lalu verifikasi dokumennya.
+            Belum ada pendaftaran berstatus Setuju untuk diseleksi. Verifikasi dahulu dokumen
+            pendaftar di tab Verifikasi.
           </p>
         )}
       </div>
 
-      {terakhir && (
-        <div className="mt-4 grid grid-cols-2 gap-3 max-w-sm">
+      {ringkasanTampil && (
+        <div className="mt-4 grid max-w-sm grid-cols-3 gap-3">
           <div className="rounded-xl bg-gov-green-600/10 p-4 text-center">
-            <p className="text-2xl font-bold text-gov-green-700">{formatAngka(terakhir.diterima)}</p>
+            <p className="text-2xl font-bold text-gov-green-700">
+              {formatAngka(ringkasanTampil.diterima)}
+            </p>
             <p className="text-sm font-semibold text-gov-green-700">Diterima</p>
           </div>
           <div className="rounded-xl bg-red-600/10 p-4 text-center">
             <p className="text-2xl font-bold text-red-700">
-              {formatAngka(terakhir.tidakDiterima)}
+              {formatAngka(ringkasanTampil.total - ringkasanTampil.diterima)}
             </p>
             <p className="text-sm font-semibold text-red-700">Tidak Diterima</p>
+          </div>
+          <div className="rounded-xl bg-gov-50 p-4 text-center">
+            <p className="text-2xl font-bold text-gov-700">
+              {formatAngka(ringkasanTampil.total - ringkasanTampil.diproses)}
+            </p>
+            <p className="text-sm font-semibold text-gov-700">Belum Diproses</p>
           </div>
         </div>
       )}
