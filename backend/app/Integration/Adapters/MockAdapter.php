@@ -30,6 +30,7 @@ class MockAdapter implements DataIntegrationGateway
             nisn: $student->nisn,
             nik: $student->nik,
             nama: $student->nama,
+            tempatLahir: $student->tempat_lahir,
             tanggalLahir: $student->tanggal_lahir,
             jenisKelamin: $student->jenis_kelamin,
             agama: $student->agama,

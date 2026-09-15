@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Student extends Model
 {
     protected $fillable = [
-        'nisn', 'nik', 'nama', 'tanggal_lahir', 'jenis_kelamin', 'agama',
-        'status_peserta', 'source',
+        'nisn', 'nik', 'nama', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama',
+        'nilai_prestasi', 'jarak_domisili_km', 'status_peserta', 'source',
     ];
 
     protected function casts(): array

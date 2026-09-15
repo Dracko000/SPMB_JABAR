@@ -14,6 +14,7 @@ readonly class StudentRecord
         public string $nisn,
         public string $nik,
         public string $nama,
+        public ?string $tempatLahir,
         public ?Carbon $tanggalLahir,
         public string $jenisKelamin,
         public ?string $agama,
@@ -32,6 +33,7 @@ readonly class StudentRecord
             nisn: (string) $data['nisn'],
             nik: (string) $data['nik'],
             nama: (string) $data['nama'],
+            tempatLahir: $data['tempat_lahir'] ?? null,
             tanggalLahir: isset($data['tanggal_lahir'])
                 ? Carbon::parse($data['tanggal_lahir'])
                 : null,
