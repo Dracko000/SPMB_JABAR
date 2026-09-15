@@ -13,4 +13,9 @@ class AdmissionPath extends Model
     {
         return $this->hasMany(Requirement::class);
     }
+
+    public function rules(): HasMany
+    {
+        return $this->hasMany(SelectionRule::class);
+    }
 }
