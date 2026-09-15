@@ -10,8 +10,13 @@ class Registration extends Model
 {
     protected $fillable = [
         'no_pendaftaran', 'student_id', 'admission_period_id', 'admission_path_id',
-        'user_id', 'status',
+        'user_id', 'status', 'verification_evidence',
     ];
+
+    protected function casts(): array
+    {
+        return ['verification_evidence' => 'array'];
+    }
 
     public function student(): BelongsTo
     {
