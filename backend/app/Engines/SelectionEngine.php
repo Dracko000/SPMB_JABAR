@@ -47,7 +47,8 @@ final class SelectionEngine
         // registration id itself is not a legal recipient. Registrations
         // without a linked user (e.g. test fixtures) simply skip dispatch.
         $recipientByRegistration = Registration::whereIn('id', collect($rows)->pluck('registration_id')->unique())
-            ->pluck('user_id', 'id');
+            ->pluck('user_id', 'id')
+            ->mapWithKeys(fn ($userId, $registrationId) => [(int) $registrationId => $userId]);
 
         foreach ($rows as $row) {
             if ($row['status'] === 'selected' && isset($recipientByRegistration[$row['registration_id']])) {

@@ -3,12 +3,14 @@
 use App\Engines\SelectionEngine;
 use App\Models\AdmissionPath;
 use App\Models\AdmissionPeriod;
+use App\Models\Notification;
 use App\Models\Quota;
 use App\Models\Registration;
 use App\Models\RegistrationChoice;
 use App\Models\School;
 use App\Models\SelectionResult;
 use App\Models\Student;
+use App\Models\User;
 
 function se_Registration(Student $student, int $pathId, array $choices): Registration
 {
@@ -117,4 +119,31 @@ it('awards one school per student across paths by path priority', function () {
     expect(SelectionResult::where('registration_id', $regZonasi->id)->where('status', 'selected')->count())->toBe(1);
     expect(SelectionResult::where('registration_id', $regPrestasi->id)->where('status', 'selected')->count())->toBe(0);
     expect(SelectionResult::where('registration_id', $regPrestasi->id)->where('status', 'not_selected')->count())->toBe(1);
+});
+
+it('notifies the linked pendaftar on publish and skips unlinked registrations', function () {
+    $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
+    $school = School::query()->firstOrFail();
+    Quota::updateOrCreate(['school_id' => $school->id, 'admission_path_id' => $path->id], ['kuota' => 1, 'terisi' => 0]);
+
+    // Linked pendaftar: selected on publish → notification row for the user.
+    $linked = Student::query()->firstOrFail();
+    $linked->update(['nilai_prestasi' => 99, 'jarak_domisili_km' => 1]);
+    $user = User::factory()->create(['role' => 'pendaftar', 'student_id' => $linked->id]);
+    $regLinked = se_Registration($linked, $path->id, [$school->id]);
+    $regLinked->update(['user_id' => $user->id]);
+
+    // Unlinked registration: no user → no notification, but results persist.
+    $unlinked = Student::query()->orderByDesc('id')->firstOrFail();
+    $unlinked->update(['nilai_prestasi' => 50, 'jarak_domisili_km' => 20]);
+    $regUnlinked = se_Registration($unlinked, $path->id, [$school->id]);
+
+    app(SelectionEngine::class)->publish(AdmissionPeriod::where('is_active', true)->firstOrFail());
+
+    $this->assertDatabaseHas('notifications', ['user_id' => $user->id, 'type' => 'selection.published']);
+    expect(Notification::where('user_id', $user->id)->firstOrFail()->payload)->toBeArray();
+
+    expect(SelectionResult::where('registration_id', $regLinked->id)->where('status', 'selected')->count())->toBe(1);
+    expect(SelectionResult::where('registration_id', $regUnlinked->id)->where('status', 'not_selected')->count())->toBe(1);
+    expect(Notification::count())->toBe(1);
 });
