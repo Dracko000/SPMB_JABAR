@@ -42,9 +42,16 @@ final class SelectionEngine
             return $this->compute($period, persist: true, runId: $runId);
         });
 
+        // Notify the pendaftar (registration.user_id) — the bus's
+        // DatabaseChannel writes notifications.user_id FK→users, so the
+        // registration id itself is not a legal recipient. Registrations
+        // without a linked user (e.g. test fixtures) simply skip dispatch.
+        $recipientByRegistration = Registration::whereIn('id', collect($rows)->pluck('registration_id')->unique())
+            ->pluck('user_id', 'id');
+
         foreach ($rows as $row) {
-            if ($row['status'] === 'selected') {
-                $this->notifications->dispatch('selection.published', $row['registration_id'], $row);
+            if ($row['status'] === 'selected' && isset($recipientByRegistration[$row['registration_id']])) {
+                $this->notifications->dispatch('selection.published', (int) $recipientByRegistration[$row['registration_id']], $row);
             }
         }
         Audit::log('selection.published', ['period_id' => $period->id, 'results' => count($rows)]);

@@ -14,6 +14,13 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(DataIntegrationGateway::class, MockAdapter::class);
+
+        $this->app->singleton(\App\Support\NotificationBus::class, function ($app) {
+            return new \App\Support\NotificationBus([
+                $app->make(\App\Channels\DatabaseChannel::class),
+                $app->make(\App\Channels\LogChannel::class),
+            ]);
+        });
     }
 
     /**
