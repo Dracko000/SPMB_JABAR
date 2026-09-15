@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdmissionSeeder::class,
             StudentSeeder::class,
             UserSeeder::class,
+            SelectionRuleSeeder::class,
         ]);
     }
 }
