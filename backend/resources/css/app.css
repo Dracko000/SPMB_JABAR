@@ -1,0 +1,48 @@
+@import url('https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.jsx';
+@source '../**/*.js';
+
+/* Jabar Civic Portal design system (Stitch export) — emerald/teal civic tokens */
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand */
+    --color-brand-50:  #f0fbf5;
+    --color-brand-100: #d3f0df;
+    --color-brand-200: #a9f3c5;
+    --color-brand-300: #6cf8bb;
+    --color-brand-400: #4edea3;
+    --color-brand-500: #2bbd82;
+    --color-brand-600: #10b981;
+    --color-brand-700: #0d5c3a;
+    --color-brand-800: #0b4a30;
+    --color-brand-900: #004328;
+    --color-brand-950: #002111;
+
+    /* Neuters / surface */
+    --color-surface: #f8f9ff;
+    --color-surface-container: #e5eeff;
+    --color-surface-container-low: #eff4ff;
+    --color-surface-container-high: #dce9ff;
+    --color-surface-container-highest: #d3e4fe;
+    --color-surface-variant: #d3e4fe;
+    --color-outline: #7a887e;
+    --color-outline-variant: #bfc9c0;
+
+    --color-ink: #0b1c30;
+    --color-ink-soft: #425769;
+    --color-ink-faint: #6b7d8f;
+
+    --color-cemara: #004328;    /* primary dark — headline/CTA on light */
+    --color-teal: #10b981;      /* accent */
+    --color-error: #ba1a1a;
+    --color-error-container: #ffdad6;
+
+    --radius-8: 8px; /* design-system roundness */
+}
