@@ -8,7 +8,7 @@ use App\Models\Registration;
 use App\Models\Student;
 use Mockery\MockInterface;
 
-function verificationRegistration(Student $student, array $overrides = []): Registration
+function ve_Registration(Student $student, array $overrides = []): Registration
 {
     return Registration::create([
         'no_pendaftaran' => 'SPMB'.now()->year.random_int(10000000, 99999999),
@@ -26,7 +26,7 @@ function verificationRegistration(Student $student, array $overrides = []): Regi
  * so a mutation makes "submitted" and "canonical source" match. Bind a fake
  * gateway so the canonical record comes from a StudentRecord, not the row.
  */
-function fakeGatewayThatReturns(StudentRecord $record): MockInterface
+function ve_fakeGatewayThatReturns(StudentRecord $record): MockInterface
 {
     $gateway = Mockery::mock(DataIntegrationGateway::class);
     $gateway->shouldReceive('lookupByNisn')->with($record->nisn)->andReturn($record);
@@ -43,7 +43,7 @@ afterEach(function () {
     app()->forgetInstance(DataIntegrationGateway::class);
 });
 
-function canonicalRecord(Student $student): StudentRecord
+function ve_canonicalRecord(Student $student): StudentRecord
 {
     return StudentRecord::fromArray([
         'nisn' => $student->nisn,
@@ -60,8 +60,8 @@ function canonicalRecord(Student $student): StudentRecord
 
 it('marks a matching registration VALID with all PASS', function () {
     $student = Student::query()->firstOrFail();
-    fakeGatewayThatReturns(canonicalRecord($student));
-    $registration = verificationRegistration($student);
+    ve_fakeGatewayThatReturns(ve_canonicalRecord($student));
+    $registration = ve_Registration($student);
 
     $engine = app(VerificationEngine::class);
     $fields = $engine->run($registration);
@@ -72,9 +72,16 @@ it('marks a matching registration VALID with all PASS', function () {
 
 it('flags a mismatched NIK as DATA TIDAK SESUAI', function () {
     $student = Student::query()->firstOrFail();
-    fakeGatewayThatReturns(canonicalRecord($student));
+
+    // Snapshot the canonical record BEFORE mutating the submitted row, so the
+    // gateway still returns the original NIK while the registration's student
+    // claims a different one. The expect below makes the ordering provable.
+    $canonical = ve_canonicalRecord($student);
+    expect($canonical->nik)->not->toBe('3201010101010101');
+
+    ve_fakeGatewayThatReturns($canonical);
     $student->update(['nik' => '3201010101010101']);
-    $registration = verificationRegistration($student);
+    $registration = ve_Registration($student);
 
     app(VerificationEngine::class)->run($registration);
 
@@ -82,9 +89,32 @@ it('flags a mismatched NIK as DATA TIDAK SESUAI', function () {
     expect($registration->fresh()->verification_evidence['fields']['nik'])->toBe('FAIL');
 });
 
+it('returns PERLU VERIFIKASI on a SKIP mix with no FAIL', function () {
+    $student = Student::query()->firstOrFail();
+
+    // Absent side-data: null tempat_lahir, no parent/education rows. The schema
+    // keeps tanggal_lahir NOT NULL, so it stays present+equal (PASS) — the mix
+    // still exercises the SKIP branch without any FAIL.
+    $student->update(['tempat_lahir' => null]);
+    $student->parent?->delete();
+    $student->educationRecord?->delete();
+    $student->unsetRelation('parent')->unsetRelation('educationRecord');
+
+    // Canonical built AFTER the deletions: those fields are null on both
+    // sides too, which is exactly the partial-evidence scenario → SKIP.
+    ve_fakeGatewayThatReturns(ve_canonicalRecord($student));
+    $registration = ve_Registration($student);
+
+    $fields = app(VerificationEngine::class)->run($registration);
+
+    expect($registration->fresh()->verification_evidence['verdict'])->toBe('PERLU VERIFIKASI');
+    expect(array_filter($fields, fn ($v) => $v === 'FAIL'))->toBeEmpty();
+    expect(array_filter($fields, fn ($v) => $v === 'SKIP'))->not->toBeEmpty();
+});
+
 it('does NOT change registration status', function () {
     $student = Student::query()->firstOrFail();
-    $registration = verificationRegistration($student, ['status' => 'draft']);
+    $registration = ve_Registration($student, ['status' => 'draft']);
 
     app(VerificationEngine::class)->run($registration);
 

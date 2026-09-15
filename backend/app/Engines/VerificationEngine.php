@@ -35,24 +35,24 @@ final class VerificationEngine
 
         $fields = [];
         $anyFail = false;
-        $hasSource = false;
+        $hasSkips = false;
 
         foreach ($comparators as $key => [$submitted, $source]) {
             if ($submitted === null || $source === null) {
                 $fields[$key] = 'SKIP';
+                $hasSkips = true;
                 continue;
             }
-            $hasSource = true;
             $match = strtolower(trim((string) $submitted)) === strtolower(trim((string) $source));
             $fields[$key] = $match ? 'PASS' : 'FAIL';
             $anyFail = $anyFail || ! $match;
         }
 
-        $verdict = match (true) {
-            $anyFail => 'DATA TIDAK SESUAI',
-            ! $hasSource => 'PERLU VERIFIKASI',
-            default => 'VALID',
-        };
+        // Design doc §3 / brief Interface line: only an ALL-PASS comparison is
+        // VALID; any SKIP (partial evidence, even without FAIL) needs review.
+        $verdict = $anyFail
+            ? 'DATA TIDAK SESUAI'
+            : ($hasSkips ? 'PERLU VERIFIKASI' : 'VALID');
 
         $registration->update([
             'verification_evidence' => [
