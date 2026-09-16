@@ -10,9 +10,11 @@ export default function StaffLogin() {
             <div className="min-h-screen bg-surface flex items-center justify-center px-6 py-10">
                 <div className="w-full max-w-md">
                     <div className="text-center mb-8">
-                        <span className="inline-flex size-14 rounded-8 bg-brand-700 text-white items-center justify-center text-3xl font-extrabold">
-                            S
-                        </span>
+                        <img
+                            src="/images/disdik-jabar.png"
+                            alt="Logo Dinas Pendidikan Provinsi Jawa Barat"
+                            className="mx-auto size-14"
+                        />
                         <h1 className="mt-4 text-2xl font-extrabold text-cemara">SPMB JABAR</h1>
                         <p className="mt-1 text-sm text-ink-faint">
                             Masuk untuk admin, operator, atau verifikator

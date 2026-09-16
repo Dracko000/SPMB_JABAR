@@ -49,7 +49,7 @@ export default function Index({ registrations }) {
 
                         {open === r.id && (
                             <div className="border-t border-outline-variant px-5 py-4">
-                                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Dokumen</h3>
+                                <h3 className="text-xs font-semibold text-ink-soft">Dokumen</h3>
                                 <div className="mt-2 space-y-2">
                                     {r.documents?.length === 0 && <p className="text-sm text-ink-faint">Belum ada dokumen.</p>}
                                     {r.documents.map((d) => (
@@ -64,7 +64,7 @@ export default function Index({ registrations }) {
                                 </div>
 
                                 <div className="mt-4">
-                                    <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Keputusan</h3>
+                                    <h3 className="text-xs font-semibold text-ink-soft">Keputusan</h3>
                                     <ReviewForm registration={r} />
                                 </div>
                             </div>

@@ -9,9 +9,11 @@ export default function AppLayout({ header, children }) {
                 <header className="bg-surface-container-low border-b border-outline-variant sticky top-0 z-20">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                         <Link href="/" className="flex items-center gap-2.5">
-                            <span className="size-9 rounded-8 bg-brand-700 text-white flex items-center justify-center font-extrabold">
-                                S
-                            </span>
+                            <img
+                                src="/images/disdik-jabar.png"
+                                alt="Logo Dinas Pendidikan Provinsi Jawa Barat"
+                                className="size-9"
+                            />
                             <span className="font-extrabold text-cemara leading-none">
                                 SPMB JABAR
                             </span>

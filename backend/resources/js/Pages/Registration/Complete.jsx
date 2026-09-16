@@ -16,7 +16,7 @@ export default function Complete({ registration }) {
                 </p>
 
                 <div className="mt-6 rounded-8 border border-brand-700 bg-brand-50 px-6 py-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Nomor Pendaftaran</p>
+                    <p className="text-xs font-semibold text-brand-700">Nomor Pendaftaran</p>
                     <p className="mt-1 font-mono text-xl font-extrabold text-cemara">{registration.no_pendaftaran}</p>
                 </div>
 

@@ -225,7 +225,7 @@ function DocUploadForm({ path }) {
 
     return (
         <form onSubmit={upload} className="mt-4 rounded-8 border border-outline-variant bg-white p-5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Jenis Dokumen</label>
+            <label className="text-xs font-semibold text-ink-soft">Jenis Dokumen</label>
             <select value={type} onChange={(e) => setType(e.target.value)}
                     className="mt-2 w-full rounded-8 border border-outline-variant px-3 py-2 text-sm focus:border-brand-700 focus:outline-none">
                 {(path?.requirements ?? []).map((r) => (

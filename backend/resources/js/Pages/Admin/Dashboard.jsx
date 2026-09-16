@@ -112,7 +112,7 @@ function QuotaTab({ quotas }) {
 
             <table className="mt-5 w-full text-sm">
                 <thead>
-                <tr className="border-b border-outline-variant text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                <tr className="border-b border-outline-variant text-left text-xs font-semibold text-ink-soft">
                     <th className="py-2 pr-3">Sekolah</th>
                     <th className="py-2 pr-3">Jalur</th>
                     <th className="py-2 pr-3">Kuota</th>
@@ -234,7 +234,7 @@ function SelectionTab({ selections, selectionRules = [], selectionResults = [], 
                 {selectionResults.length > 0 && (
                     <table className="w-full text-sm">
                         <thead>
-                        <tr className="border-b border-outline-variant text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                        <tr className="border-b border-outline-variant text-left text-xs font-semibold text-ink-soft">
                             <th className="py-2 pr-3">Sekolah</th>
                             <th className="py-2 pr-3">Pendaftar</th>
                             <th className="py-2 pr-3">Skor</th>
@@ -268,7 +268,7 @@ function RegistrationsTab({ registrations }) {
         <Panel title={`Daftar Pendaftar (${registrations.length})`}>
             <table className="w-full text-sm">
                 <thead>
-                <tr className="border-b border-outline-variant text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                <tr className="border-b border-outline-variant text-left text-xs font-semibold text-ink-soft">
                     <th className="py-2 pr-3">No. Pendaftaran</th>
                     <th className="py-2 pr-3">Nama</th>
                     <th className="py-2 pr-3">Jalur</th>
@@ -303,7 +303,7 @@ function ComplaintsTab({ complaints }) {
             </div>
             <table className="w-full text-sm max-md:hidden">
                 <thead>
-                <tr className="border-b border-outline-variant text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                <tr className="border-b border-outline-variant text-left text-xs font-semibold text-ink-soft">
                     <th className="py-2 pr-3">Tiket</th>
                     <th className="py-2 pr-3">Perihal</th>
                     <th className="py-2 pr-3">Pengadu</th>
