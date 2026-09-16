@@ -20,6 +20,12 @@ function pendaftarUser(): User
     ]);
 }
 
+it('forbids staff roles from the pendaftar-only registration page', function () {
+    $staff = User::factory()->create(['role' => 'admin_provinsi', 'student_id' => null]);
+
+    $this->actingAs($staff)->get('/pendaftaran')->assertForbidden();
+});
+
 it('creates a draft on first visit', function () {
     $user = pendaftarUser();
 

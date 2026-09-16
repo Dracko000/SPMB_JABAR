@@ -46,7 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::post('notifications/read', [DashboardController::class, 'markRead'])->name('notifications.read');
 
     // Registry (pendaftar)
-    Route::prefix('pendaftaran')->name('registration.')->group(function () {
+    Route::prefix('pendaftaran')->name('registration.')->middleware(['role:pendaftar'])->group(function () {
         Route::get('/', [RegistrationController::class, 'show'])->name('show');
         Route::post('path', [RegistrationController::class, 'pickPath'])->name('path');
         Route::post('choices', [RegistrationController::class, 'saveChoices'])->name('choices');
