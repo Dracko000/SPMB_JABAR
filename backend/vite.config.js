@@ -13,6 +13,11 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        // Bind to the IPv4 loopback explicitly. `localhost` on Windows makes
+        // Vite listen on [::1] only, which browsers may not reach; 127.0.0.1
+        // is guaranteed reachable and the emitted tag stays on localhost.
+        host: '127.0.0.1',
+        port: 5173,
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

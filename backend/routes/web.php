@@ -21,6 +21,12 @@ Route::post('auth/nisn', [AuthController::class, 'lookup'])->middleware('throttl
 Route::post('auth/otp/send', [AuthController::class, 'sendOtp'])->middleware('throttle:5,1')->name('auth.otp.send');
 Route::post('auth/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:5,1')->name('auth.otp.verify');
 
+// Staff password login — the `auth` middleware redirects guests to route('login').
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthController::class, 'staffLoginPage'])->name('login');
+    Route::post('login', [AuthController::class, 'staffLogin'])->middleware('throttle:5,1');
+});
+
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 

@@ -14,6 +14,37 @@ class AuthController extends Controller
     public function __construct(private readonly AuthFlow $auth) {}
 
     /**
+     * Staff password login (admin / operator / verifikator). Pendaftar that
+     * have no seeded password keep using the NISN → OTP flow.
+     */
+    public function staffLoginPage(): Response
+    {
+        return Inertia::render('Auth/StaffLogin');
+    }
+
+    public function staffLogin(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            return back()->withErrors(['email' => 'Email atau kata sandi salah.'])->withInput();
+        }
+
+        $request->session()->regenerate();
+
+        $user = $request->user();
+
+        return (match ($user->role) {
+            'admin_provinsi', 'admin_kabkota' => redirect()->route('admin.index'),
+            'operator_sekolah', 'verifikator' => redirect()->route('verification.index'),
+            default => redirect()->route('dashboard.pendaftar'),
+        })->with('flash', ['success' => 'Selamat datang, '.$user->name]);
+    }
+
+    /**
      * Step 1 — NISN lookup. Renders confirmation screen with masked data,
      * or back with error when the gateway says not-found.
      */
