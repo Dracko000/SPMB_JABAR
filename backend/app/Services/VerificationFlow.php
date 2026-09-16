@@ -14,7 +14,10 @@ use App\Support\NotificationBus;
  */
 class VerificationFlow
 {
-    public function __construct(private readonly NotificationBus $notifications) {}
+    public function __construct(
+        private readonly NotificationBus $notifications,
+        private readonly QuotaService $quota,
+    ) {}
 
     public function review(
         Registration $registration,
@@ -41,6 +44,16 @@ class VerificationFlow
         ]);
 
         $registration->update(['status' => $status === 'valid' ? 'verified' : $status]);
+
+        // Rejected/needs-revision registrations free their reserved seats so
+        // the pool reflects only live reservations. A nontransitional
+        // registration is dead at every path; a perbaikan resubmission
+        // re-reserves via RegistrationFlow::submit.
+        if ($status !== 'valid') {
+            foreach ($registration->choices as $choice) {
+                $this->quota->release((int) $choice->school_id, (int) $registration->admission_path_id);
+            }
+        }
 
         Audit::log('registration.verified', [
             'registration_id' => $registration->id,

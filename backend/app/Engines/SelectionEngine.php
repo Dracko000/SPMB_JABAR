@@ -39,6 +39,8 @@ final class SelectionEngine
             $registrationIds = Registration::where('admission_period_id', $period->id)->pluck('id');
             SelectionResult::whereIn('registration_id', $registrationIds)->delete();
 
+            $this->reconcileQuotas($period);
+
             return $this->compute($period, persist: true, runId: $runId);
         });
 
@@ -109,15 +111,24 @@ final class SelectionEngine
                         'priority' => (int) $choice->priority,
                         'score' => $score,
                         'created_at' => $reg->created_at,
+                        'birthdate' => $reg->student?->tanggal_lahir,
                         'nama' => $reg->student?->nama,
                     ];
                 }
             }
 
-            // Students by best candidate score desc; tie → created_at asc.
+            // Students by best candidate score desc; tie → rule tie_break
+            // (date_submitted_asc = earliest submit, age_youngest = youngest
+            // applicant, i.e. latest birthdate).
             $studentIds = collect($cands)
                 ->map(fn ($list) => collect($list)->max('score'))
-                ->sortBy(function ($score, $id) use ($cands) {
+                ->sortBy(function ($score, $id) use ($cands, $rule) {
+                    if ($rule->tie_break === 'age_youngest') {
+                        $birthdate = $cands[$id][0]['birthdate'];
+                        // Null birthdate treated as oldest — sorts last among ties.
+                        return [-$score, $birthdate ? -$birthdate->timestamp : PHP_INT_MAX];
+                    }
+
                     return [-$score, $cands[$id][0]['created_at']->timestamp];
                 })
                 ->keys();
@@ -190,6 +201,36 @@ final class SelectionEngine
         }
 
         return $out;
+    }
+
+    /**
+     * Verified-count model: set `quotas.terisi` to the count of verified
+     * registrations whose choices include each school+path. Releasing stale
+     * reservations (submit-time reserves with no terminal review) keeps the
+     * accounting column aligned with the actual selection pool.
+     */
+    private function reconcileQuotas(AdmissionPeriod $period): void
+    {
+        $verified = DB::table('registration_choices')
+            ->join('registrations', 'registration_choices.registration_id', '=', 'registrations.id')
+            ->where('registrations.admission_period_id', $period->id)
+            ->where('registrations.status', 'verified')
+            ->select('registration_choices.school_id', 'registrations.admission_path_id')
+            ->selectRaw('COUNT(DISTINCT registrations.id) AS cnt')
+            ->groupBy('registration_choices.school_id', 'registrations.admission_path_id')
+            ->get()
+            ->keyBy(fn ($r) => $r->school_id.'|'.$r->admission_path_id);
+
+        $pathIds = $period->paths()->pluck('id');
+
+        Quota::whereIn('admission_path_id', $pathIds)
+            ->get(['id', 'school_id', 'admission_path_id', 'terisi'])
+            ->each(function (Quota $q) use ($verified) {
+                $want = (int) ($verified[$q->school_id.'|'.$q->admission_path_id]->cnt ?? 0);
+                if ((int) $q->terisi !== $want) {
+                    Quota::where('id', $q->id)->update(['terisi' => $want]);
+                }
+            });
     }
 
     private function groupPreview(array $rows): array

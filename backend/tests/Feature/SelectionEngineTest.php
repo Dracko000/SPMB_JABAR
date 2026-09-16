@@ -121,6 +121,31 @@ it('awards one school per student across paths by path priority', function () {
     expect(SelectionResult::where('registration_id', $regPrestasi->id)->where('status', 'not_selected')->count())->toBe(1);
 });
 
+it('reconciles quota to verified count with stale reservations released', function () {
+    $period = AdmissionPeriod::where('is_active', true)->firstOrFail();
+    $school = School::query()->firstOrFail();
+    $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
+    Quota::updateOrCreate(['school_id' => $school->id, 'admission_path_id' => $path->id], ['kuota' => 5, 'terisi' => 3]);
+
+    // Phase 1: two verified registrations → stale terisi 3 reconciled to 2.
+    $a = Student::query()->firstOrFail();
+    $a->update(['nilai_prestasi' => 95, 'jarak_domisili_km' => 1]);
+    se_Registration($a, $path->id, [$school->id]);
+    $b = Student::query()->orderByDesc('id')->firstOrFail();
+    $b->update(['nilai_prestasi' => 90, 'jarak_domisili_km' => 2]);
+    se_Registration($b, $path->id, [$school->id]);
+
+    app(SelectionEngine::class)->publish($period);
+    expect(Quota::where('school_id', $school->id)->where('admission_path_id', $path->id)->value('terisi'))->toBe(2);
+
+    // Phase 2: operator rejects (a) → its seat releases; (b) stays verified.
+    $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
+    $regA = Registration::where('admission_period_id', $period->id)->where('student_id', $a->id)->firstOrFail();
+    app(\App\Services\VerificationFlow::class)->review($regA, $operator, 'ditolak');
+
+    expect(Quota::where('school_id', $school->id)->where('admission_path_id', $path->id)->value('terisi'))->toBe(1);
+});
+
 it('notifies the linked pendaftar on publish and skips unlinked registrations', function () {
     $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
     $school = School::query()->firstOrFail();
