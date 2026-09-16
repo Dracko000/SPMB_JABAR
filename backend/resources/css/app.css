@@ -7,23 +7,23 @@
 @source '../**/*.jsx';
 @source '../**/*.js';
 
-/* Jabar Civic Portal design system (Stitch export) — emerald/teal civic tokens */
+/* SPMB JABAR design system — blue civic tokens (brand-700 = #0000ff) */
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* Brand */
-    --color-brand-50:  #f0fbf5;
-    --color-brand-100: #d3f0df;
-    --color-brand-200: #a9f3c5;
-    --color-brand-300: #6cf8bb;
-    --color-brand-400: #4edea3;
-    --color-brand-500: #2bbd82;
-    --color-brand-600: #10b981;
-    --color-brand-700: #0d5c3a;
-    --color-brand-800: #0b4a30;
-    --color-brand-900: #004328;
-    --color-brand-950: #002111;
+    --color-brand-50:  #eff4ff;
+    --color-brand-100: #dce8ff;
+    --color-brand-200: #c2d4ff;
+    --color-brand-300: #9cb8ff;
+    --color-brand-400: #6690ff;
+    --color-brand-500: #3360ff;
+    --color-brand-600: #0a33ff;
+    --color-brand-700: #0000ff;
+    --color-brand-800: #0022cc;
+    --color-brand-900: #001a99;
+    --color-brand-950: #001166;
 
     /* Neuters / surface */
     --color-surface: #f8f9ff;
@@ -39,8 +39,8 @@
     --color-ink-soft: #425769;
     --color-ink-faint: #6b7d8f;
 
-    --color-cemara: #004328;    /* primary dark — headline/CTA on light */
-    --color-teal: #10b981;      /* accent */
+    --color-cemara: #001a99;    /* primary dark — headline/CTA on light */
+    --color-teal: #0a33ff;      /* accent */
     --color-error: #ba1a1a;
     --color-error-container: #ffdad6;
 

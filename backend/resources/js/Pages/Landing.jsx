@@ -53,7 +53,7 @@ export default function Landing({ name, year: periodYear, period, stats }) {
                         className="pointer-events-none absolute inset-0 opacity-[0.07]"
                         style={{
                             backgroundImage:
-                                'linear-gradient(90deg, #0d5c3a 1px, transparent 1px), linear-gradient(0deg, #0d5c3a 1px, transparent 1px)',
+                                'linear-gradient(90deg, #0a33ff 1px, transparent 1px), linear-gradient(0deg, #0a33ff 1px, transparent 1px)',
                             backgroundSize: '56px 56px',
                         }}
                     />
