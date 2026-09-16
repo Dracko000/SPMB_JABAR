@@ -12,7 +12,7 @@ const sections = [
     ['complaints', 'Pengaduan'],
 ];
 
-export default function Dashboard({ period, quotas, selections, registrations, complaints }) {
+export default function Dashboard({ period, quotas, selections, registrations, complaints, schools = [], selectionRules = [], selectionResults = [], selectionPreview }) {
     const { flash } = usePage().props;
     const [tab, setTab] = useState('overview');
 
@@ -42,7 +42,7 @@ export default function Dashboard({ period, quotas, selections, registrations, c
             <div className="mt-6">
                 {tab === 'overview' && <Overview quotas={quotas} selections={selections} registrations={registrations} />}
                 {tab === 'quota' && <QuotaTab quotas={quotas} />}
-                {tab === 'selection' && <SelectionTab selections={selections} />}
+                {tab === 'selection' && <SelectionTab selections={selections} schools={schools} selectionRules={selectionRules} selectionResults={selectionResults} selectionPreview={selectionPreview} />}
                 {tab === 'registrations' && <RegistrationsTab registrations={registrations} />}
                 {tab === 'complaints' && <ComplaintsTab complaints={complaints} />}
             </div>
@@ -135,41 +135,120 @@ function QuotaTab({ quotas }) {
     );
 }
 
-function SelectionTab({ selections }) {
-    const run = () => router.post('/admin/seleksi/run', {}, { preserveScroll: true });
+function SelectionTab({ selections, selectionRules = [], selectionResults = [], selectionPreview, schools = [] }) {
+    const { errors } = usePage().props;
+    const [ruleDraft, setRuleDraft] = useState({});
+
+    const schoolName = (schoolId) => schools.find((x) => x.id === schoolId)?.name ?? `Sekolah #${schoolId}`;
+
+    const saveRule = (pathId, e) => {
+        e.preventDefault();
+        router.post('/admin/seleksi/rules', { path_id: pathId, ...ruleDraft[pathId] }, { preserveScroll: true });
+    };
+
+    const dryRun = () => router.post('/admin/seleksi/dry-run', {}, { preserveScroll: true });
+    const publish = () => router.post('/admin/seleksi/publish', {}, { preserveScroll: true });
 
     return (
-        <Panel title="Seleksi Pendaftar (fase 1)">
-            <p className="text-sm text-ink-faint">
-                Menjalankan seleksi memberi peringkat pendaftar terverifikasi per sekolah.
-            </p>
-            <button onClick={run} className="mt-4 rounded-8 bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
-                Jalankan Seleksi
-            </button>
-            <div className="mt-5">
-                {selections.length === 0 ? (
-                    <p className="text-sm text-ink-faint">Belum ada hasil seleksi.</p>
-                ) : (
+        <Panel title="Seleksi Pendaftar">
+            <div className="space-y-5">
+                {/* Rules editor */}
+                <div>
+                    <h4 className="font-semibold text-ink">Aturan per Jalur</h4>
+                    <div className="mt-3 space-y-3">
+                        {selectionRules.map((r) => (
+                            <form key={r.id} onSubmit={(e) => saveRule(r.path_id, e)} className="rounded-8 border border-outline-variant p-3">
+                                <div className="flex flex-wrap items-end gap-3 text-sm">
+                                    <span className="font-medium text-ink">{r.path?.name ?? `Jalur #${r.path_id}`}</span>
+                                    <label className="flex flex-col gap-1">
+                                        <span className="text-xs text-ink-faint">Bobot Nilai</span>
+                                        <input type="number" min="0" max="1" step="0.05" value={ruleDraft[r.path_id]?.score_weight ?? r.score_weight}
+                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.path_id]: { ...d[r.path_id], score_weight: parseFloat(e.target.value) } }))}
+                                               className="w-24 rounded-8 border border-outline-variant px-2 py-1.5" />
+                                    </label>
+                                    <label className="flex flex-col gap-1">
+                                        <span className="text-xs text-ink-faint">Bobot Jarak</span>
+                                        <input type="number" min="0" max="1" step="0.05" value={ruleDraft[r.path_id]?.distance_weight ?? r.distance_weight}
+                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.path_id]: { ...d[r.path_id], distance_weight: parseFloat(e.target.value) } }))}
+                                               className="w-24 rounded-8 border border-outline-variant px-2 py-1.5" />
+                                    </label>
+                                    <label className="flex flex-col gap-1">
+                                        <span className="text-xs text-ink-faint">Tie-break</span>
+                                        <select value={ruleDraft[r.path_id]?.tie_break ?? r.tie_break}
+                                                onChange={(e) => setRuleDraft((d) => ({ ...d, [r.path_id]: { ...d[r.path_id], tie_break: e.target.value } }))}
+                                                className="rounded-8 border border-outline-variant px-2 py-1.5">
+                                            <option value="date_submitted_asc">Tanggal submit awal</option>
+                                            <option value="age_youngest">Usia termuda</option>
+                                        </select>
+                                    </label>
+                                    <button className="rounded-8 bg-brand-700 px-3 py-1.5 text-xs font-bold text-white">Simpan</button>
+                                </div>
+                            </form>
+                        ))}
+                    </div>
+                    {errors.score_weight && <p className="mt-1 text-sm text-error">{errors.score_weight}</p>}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <button onClick={dryRun} className="rounded-8 bg-surface-container-low border border-outline-variant px-4 py-2 text-sm font-bold text-ink">Hitung (dry-run)</button>
+                    <button onClick={publish} className="rounded-8 bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Publikasikan Hasil</button>
+                </div>
+
+                {/* Preview */}
+                {selectionPreview && (
+                    <div className="rounded-8 border border-outline-variant">
+                        <div className="border-b border-outline-variant px-4 py-3 font-semibold text-ink">Pratinjau Hasil per Sekolah</div>
+                        {selectionPreview.schools?.length === 0 ? (
+                            <p className="p-4 text-sm text-ink-faint">Tidak ada pendaftar terverifikasi untuk jalur aktif.</p>
+                        ) : (
+                            selectionPreview.schools.map((s) => (
+                                <div key={s.school_id} className="px-4 py-3 border-b border-outline-variant last:border-0">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="font-medium text-ink">{schoolName(s.school_id)}</span>
+                                        <span className="text-xs text-ink-faint">{s.rows.length} diterima</span>
+                                    </div>
+                                    <ol className="mt-2 text-sm text-ink-soft">
+                                        {s.rows.map((r, i) => (
+                                            <li key={i} className="flex justify-between py-0.5">
+                                                <span>#{r.rank} · {r.nama ?? `Pendaftar ${r.registration_id}`}</span>
+                                                <span className="font-mono text-xs">{r.score}</span>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+
+                {/* Published results */}
+                {selectionResults.length > 0 && (
                     <table className="w-full text-sm">
                         <thead>
                         <tr className="border-b border-outline-variant text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">
                             <th className="py-2 pr-3">Sekolah</th>
                             <th className="py-2 pr-3">Pendaftar</th>
-                            <th className="py-2 pr-3">Peringkat</th>
+                            <th className="py-2 pr-3">Skor</th>
                             <th className="py-2">Status</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant">
-                        {selections.map((s) => (
-                            <tr key={s.id}>
-                                <td className="py-2.5 pr-3 font-medium text-ink">{s.school?.name}</td>
-                                <td className="py-2.5 pr-3 text-ink-soft">{s.registration?.student?.nama}</td>
-                                <td className="py-2.5 pr-3">{s.rank}</td>
-                                <td className="py-2.5"><Badge status={s.status} /></td>
+                        {selectionResults.map((r) => (
+                            <tr key={r.id}>
+                                <td className="py-2.5 pr-3 font-medium text-ink">{schoolName(r.school_id)}</td>
+                                <td className="py-2.5 pr-3 text-ink-soft">{r.registration?.student?.nama}</td>
+                                <td className="py-2.5 pr-3 font-mono text-xs">{r.composite_score}</td>
+                                <td className="py-2.5"><Badge status={r.status} /></td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
+                )}
+
+                {/* Legacy flat results */}
+                {selectionPreview == null && selections.length > 0 && (
+                    <div className="text-sm text-ink-faint">{selections.length} hasil seleksi tersimpan.</div>
                 )}
             </div>
         </Panel>
