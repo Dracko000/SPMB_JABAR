@@ -41,3 +41,23 @@ it('non-admin is denied', function () {
 
     $this->actingAs($user)->post('/admin/seleksi/dry-run')->assertForbidden();
 });
+
+it('admin_kabkota cannot run or publish selection (provinsi-only)', function () {
+    $kabkota = User::factory()->create(['role' => 'admin_kabkota']);
+
+    $this->actingAs($kabkota)->post('/admin/seleksi/dry-run')->assertForbidden();
+    $this->actingAs($kabkota)->post('/admin/seleksi/publish')->assertForbidden();
+});
+
+it('admin_kabkota cannot edit selection rules (provinsi-only)', function () {
+    $kabkota = User::factory()->create(['role' => 'admin_kabkota']);
+    $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
+
+    $this->actingAs($kabkota)->post('/admin/seleksi/rules', [
+        'path_id' => $path->id, 'score_weight' => 0.5, 'distance_weight' => 0.5,
+        'tie_break' => 'date_submitted_asc',
+    ])->assertForbidden();
+
+    // Seeded rule for prestasi unchanged — no upsert happened through the guard.
+    $this->assertDatabaseHas('selection_rules', ['admission_path_id' => $path->id, 'score_weight' => 0.900]);
+});
