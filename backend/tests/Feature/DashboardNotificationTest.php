@@ -27,7 +27,7 @@ it('pendaftar dashboard exposes unread notification counts and marks all read on
             ->where('notifications_unread', 2)
             ->has('notifications', 2));
 
-    $this->actingAs($user)->get('/notifications/read')
+    $this->actingAs($user)->post('/notifications/read')
         ->assertRedirect();
 
     $this->assertDatabaseMissing('notifications', ['user_id' => $user->id, 'read_at' => null]);

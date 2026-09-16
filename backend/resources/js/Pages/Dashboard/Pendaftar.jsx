@@ -118,7 +118,7 @@ export default function Pendaftar({ registration, kpis, notifications, notificat
 }
 
 function markAllRead() {
-    router.get('/notifications/read');
+    router.post('/notifications/read');
 }
 
 function DetailRow({ label, value }) {
