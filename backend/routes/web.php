@@ -49,7 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->middleware(['role:admin_provinsi,admin_kabkota'])->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('index');
         Route::post('kuota', [AdminController::class, 'approveQuota'])->name('kuota');
-        Route::post('seleksi/run', [AdminController::class, 'runSelection'])->name('selection.run');
+        Route::post('seleksi/dry-run', [AdminController::class, 'dryRunSelection'])->name('selection.dry');
+        Route::post('seleksi/publish', [AdminController::class, 'publishSelection'])->name('selection.publish');
+        Route::post('seleksi/rules', [AdminController::class, 'saveSelectionRule'])->name('selection.rules');
         Route::post('pengaduan/{complaint}/respond', [ComplaintController::class, 'respond'])->name('complaint.respond');
     });
 });
