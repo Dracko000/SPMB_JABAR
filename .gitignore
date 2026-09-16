@@ -3,3 +3,10 @@ node_modules/
 out/
 *.log
 tsconfig.tsbuildinfo
+
+# Postgres portable runtime (downloaded binaries + data dir — not source)
+infra/pg/pgsql/
+infra/pg/data/
+
+# Stitch design exports (generated from the design tool)
+stitch-exports/
