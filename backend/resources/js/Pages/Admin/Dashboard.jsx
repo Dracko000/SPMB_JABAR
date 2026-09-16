@@ -146,7 +146,7 @@ function SelectionTab({ selections, selectionRules = [], selectionResults = [], 
         router.post('/admin/seleksi/rules', { path_id: pathId, ...ruleDraft[pathId] }, { preserveScroll: true });
     };
 
-    const dryRun = () => router.post('/admin/seleksi/dry-run', {}, { preserveScroll: true });
+    const dryRun = () => router.post('/admin/seleksi/dry-run', {}, { preserveScroll: true, preserveState: true });
     const publish = () => router.post('/admin/seleksi/publish', {}, { preserveScroll: true });
 
     return (
@@ -157,36 +157,44 @@ function SelectionTab({ selections, selectionRules = [], selectionResults = [], 
                     <h4 className="font-semibold text-ink">Aturan per Jalur</h4>
                     <div className="mt-3 space-y-3">
                         {selectionRules.map((r) => (
-                            <form key={r.id} onSubmit={(e) => saveRule(r.path_id, e)} className="rounded-8 border border-outline-variant p-3">
+                            <form key={r.id} onSubmit={(e) => saveRule(r.admission_path_id, e)} className="rounded-8 border border-outline-variant p-3">
                                 <div className="flex flex-wrap items-end gap-3 text-sm">
-                                    <span className="font-medium text-ink">{r.path?.name ?? `Jalur #${r.path_id}`}</span>
+                                    <span className="font-medium text-ink">{r.path?.name ?? `Jalur #${r.admission_path_id}`}</span>
                                     <label className="flex flex-col gap-1">
                                         <span className="text-xs text-ink-faint">Bobot Nilai</span>
-                                        <input type="number" min="0" max="1" step="0.05" value={ruleDraft[r.path_id]?.score_weight ?? r.score_weight}
-                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.path_id]: { ...d[r.path_id], score_weight: parseFloat(e.target.value) } }))}
+                                        <input type="number" min="0" max="1" step="0.05" value={ruleDraft[r.admission_path_id]?.score_weight ?? r.score_weight}
+                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.admission_path_id]: { ...d[r.admission_path_id], score_weight: parseFloat(e.target.value) } }))}
                                                className="w-24 rounded-8 border border-outline-variant px-2 py-1.5" />
                                     </label>
                                     <label className="flex flex-col gap-1">
                                         <span className="text-xs text-ink-faint">Bobot Jarak</span>
-                                        <input type="number" min="0" max="1" step="0.05" value={ruleDraft[r.path_id]?.distance_weight ?? r.distance_weight}
-                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.path_id]: { ...d[r.path_id], distance_weight: parseFloat(e.target.value) } }))}
+                                        <input type="number" min="0" max="1" step="0.05" value={ruleDraft[r.admission_path_id]?.distance_weight ?? r.distance_weight}
+                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.admission_path_id]: { ...d[r.admission_path_id], distance_weight: parseFloat(e.target.value) } }))}
                                                className="w-24 rounded-8 border border-outline-variant px-2 py-1.5" />
                                     </label>
                                     <label className="flex flex-col gap-1">
                                         <span className="text-xs text-ink-faint">Tie-break</span>
-                                        <select value={ruleDraft[r.path_id]?.tie_break ?? r.tie_break}
-                                                onChange={(e) => setRuleDraft((d) => ({ ...d, [r.path_id]: { ...d[r.path_id], tie_break: e.target.value } }))}
+                                        <select value={ruleDraft[r.admission_path_id]?.tie_break ?? r.tie_break}
+                                                onChange={(e) => setRuleDraft((d) => ({ ...d, [r.admission_path_id]: { ...d[r.admission_path_id], tie_break: e.target.value } }))}
                                                 className="rounded-8 border border-outline-variant px-2 py-1.5">
                                             <option value="date_submitted_asc">Tanggal submit awal</option>
                                             <option value="age_youngest">Usia termuda</option>
                                         </select>
+                                    </label>
+                                    <label className="flex items-center gap-1.5">
+                                        <input type="checkbox" checked={ruleDraft[r.admission_path_id]?.is_active ?? r.is_active}
+                                               onChange={(e) => setRuleDraft((d) => ({ ...d, [r.admission_path_id]: { ...d[r.admission_path_id], is_active: e.target.checked } }))}
+                                               className="h-4 w-4 rounded border-outline-variant" />
+                                        <span className="text-xs text-ink-faint">Aktif</span>
                                     </label>
                                     <button className="rounded-8 bg-brand-700 px-3 py-1.5 text-xs font-bold text-white">Simpan</button>
                                 </div>
                             </form>
                         ))}
                     </div>
+                    {errors.path_id && <p className="mt-1 text-sm text-error">{errors.path_id}</p>}
                     {errors.score_weight && <p className="mt-1 text-sm text-error">{errors.score_weight}</p>}
+                    {errors.tie_break && <p className="mt-1 text-sm text-error">{errors.tie_break}</p>}
                 </div>
 
                 {/* Actions */}
@@ -211,7 +219,7 @@ function SelectionTab({ selections, selectionRules = [], selectionResults = [], 
                                     <ol className="mt-2 text-sm text-ink-soft">
                                         {s.rows.map((r, i) => (
                                             <li key={i} className="flex justify-between py-0.5">
-                                                <span>#{r.rank} · {r.nama ?? `Pendaftar ${r.registration_id}`}</span>
+                                                <span>#{r.rank} · {r.nama ?? '—'}</span>
                                                 <span className="font-mono text-xs">{r.score}</span>
                                             </li>
                                         ))}
