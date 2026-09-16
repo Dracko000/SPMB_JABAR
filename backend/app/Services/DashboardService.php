@@ -19,6 +19,9 @@ class DashboardService
                 'no_pendaftaran' => $registration?->no_pendaftaran,
                 'dokumen' => $registration?->documents()->count() ?? 0,
             ],
+            'notifications' => \App\Models\Notification::where('user_id', $user->id)
+                ->orderByDesc('created_at')->limit(20)->get(),
+            'notifications_unread' => \App\Models\Notification::where('user_id', $user->id)->whereNull('read_at')->count(),
         ];
     }
 

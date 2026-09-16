@@ -34,6 +34,11 @@ export default function Index({ registrations }) {
                             </div>
                             <div className="flex items-center gap-3">
                                 <span className="text-sm text-ink-soft">{r.path?.name}</span>
+                                {r.verification_evidence?.verdict && (
+                                    <Badge status={r.verification_evidence.verdict === 'DATA TIDAK SESUAI' ? 'ditolak' : 'pending'}>
+                                        {r.verification_evidence.verdict}
+                                    </Badge>
+                                )}
                                 <Badge status={r.status} />
                             </div>
                         </button>

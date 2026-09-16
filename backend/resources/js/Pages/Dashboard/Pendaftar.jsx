@@ -4,7 +4,7 @@ import Badge from '../../Components/Badge';
 import FlashMessage from '../../Components/FlashMessage';
 import StatCard from '../../Components/StatCard';
 
-export default function Pendaftar({ registration, kpis }) {
+export default function Pendaftar({ registration, kpis, notifications, notifications_unread }) {
     const { auth, flash } = usePage().props;
 
     const hasRegistration = registration?.no_pendaftaran;
@@ -81,6 +81,28 @@ export default function Pendaftar({ registration, kpis }) {
                     </div>
                 </div>
             )}
+
+            <div className="mt-6 rounded-8 border border-outline-variant bg-white overflow-hidden">
+                <div className="border-b border-outline-variant px-5 py-4 flex items-center justify-between">
+                    <h2 className="font-bold text-ink">Pengumuman</h2>
+                    {notifications_unread > 0 && <Badge status="pending">{notifications_unread} baru</Badge>}
+                </div>
+                {notifications?.length === 0 ? (
+                    <p className="px-5 py-4 text-sm text-ink-faint">Belum ada pengumuman.</p>
+                ) : (
+                    <ul className="divide-y divide-outline-variant text-sm">
+                        {notifications.map((n) => (
+                            <li key={n.id} className="px-5 py-3">
+                                <span className="font-semibold text-ink">
+                                    {n.type === 'selection.published' ? 'Hasil seleksi tersedia' : n.type.replace(/[._]/g, ' ')}
+                                </span>
+                                {n.payload?.no_pendaftaran && <span className="ml-2 font-mono text-xs text-ink-faint">{n.payload.no_pendaftaran}</span>}
+                                <p className="mt-0.5 text-xs text-ink-faint">{n.created_at}</p>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
 
             <LogoutButton />
         </AppLayout>
