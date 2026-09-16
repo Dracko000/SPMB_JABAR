@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('dashboard', [DashboardController::class, 'show'])->name('dashboard.pendaftar');
+    Route::get('notifications/read', [DashboardController::class, 'markRead'])->name('notifications.read');
 
     // Registry (pendaftar)
     Route::prefix('pendaftaran')->name('registration.')->group(function () {

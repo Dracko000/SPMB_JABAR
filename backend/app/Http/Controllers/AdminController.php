@@ -50,7 +50,11 @@ class AdminController extends Controller
             'paths' => AdmissionPath::all(),
             'complaints' => \App\Models\Complaint::with('user')->orderByDesc('created_at')->get(),
             'selectionRules' => $period ? $this->rules->all($period) : collect(),
-            'selectionResults' => SelectionResult::with(['registration.student', 'school'])->latest('id')->limit(50)->get(),
+            'selectionResults' => SelectionResult::with(['registration.student', 'school'])
+                ->whereHas('registration', fn ($q) => $q->where('admission_period_id', $period?->id))
+                ->latest('id')
+                ->limit(50)
+                ->get(),
         ];
     }
 
@@ -84,6 +88,12 @@ class AdminController extends Controller
             'tie_break' => ['required', 'string', 'in:date_submitted_asc,age_youngest'],
             'is_active' => ['nullable', 'boolean'],
         ]);
+
+        // Weights are a budget over CompositeScore (design §7) — cap the sum so
+        // the normalized 0-100 frame isn't broken by e.g. 1.0 + 1.0 → 200.
+        if ($validated['score_weight'] + $validated['distance_weight'] > 1) {
+            return back()->withErrors(['score_weight' => 'Bobot skor + jarak tidak boleh melebihi 1.'])->withInput();
+        }
 
         $this->rules->upsert($period, (int) $validated['path_id'], $request->user()->id, $validated);
 

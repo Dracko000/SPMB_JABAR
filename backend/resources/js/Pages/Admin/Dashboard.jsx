@@ -143,7 +143,7 @@ function SelectionTab({ selections, selectionRules = [], selectionResults = [], 
 
     const saveRule = (pathId, e) => {
         e.preventDefault();
-        router.post('/admin/seleksi/rules', { path_id: pathId, ...ruleDraft[pathId] }, { preserveScroll: true });
+        router.post('/admin/seleksi/rules', { path_id: pathId, ...ruleDraft[pathId] }, { preserveScroll: true, preserveState: true });
     };
 
     const dryRun = () => router.post('/admin/seleksi/dry-run', {}, { preserveScroll: true, preserveState: true });

@@ -3,9 +3,11 @@ import AppLayout from '../../Layouts/AppLayout';
 import Badge from '../../Components/Badge';
 import FlashMessage from '../../Components/FlashMessage';
 import StatCard from '../../Components/StatCard';
+import { useState } from 'react';
 
 export default function Pendaftar({ registration, kpis, notifications, notifications_unread }) {
     const { auth, flash } = usePage().props;
+    const [viewed, setViewed] = useState(false);
 
     const hasRegistration = registration?.no_pendaftaran;
 
@@ -85,7 +87,13 @@ export default function Pendaftar({ registration, kpis, notifications, notificat
             <div className="mt-6 rounded-8 border border-outline-variant bg-white overflow-hidden">
                 <div className="border-b border-outline-variant px-5 py-4 flex items-center justify-between">
                     <h2 className="font-bold text-ink">Pengumuman</h2>
-                    {notifications_unread > 0 && <Badge status="pending">{notifications_unread} baru</Badge>}
+                    {notifications_unread > 0 && !viewed ? (
+                            <button onClick={markAllRead} className="rounded-8 border border-outline-variant px-3 py-1.5 text-xs font-bold text-ink hover:border-brand-700">
+                                Tandai sudah dibaca
+                            </button>
+                        ) : (
+                            notifications_unread > 0 && <Badge status="pending">{notifications_unread} baru</Badge>
+                        )}
                 </div>
                 {notifications?.length === 0 ? (
                     <p className="px-5 py-4 text-sm text-ink-faint">Belum ada pengumuman.</p>
@@ -107,6 +115,10 @@ export default function Pendaftar({ registration, kpis, notifications, notificat
             <LogoutButton />
         </AppLayout>
     );
+}
+
+function markAllRead() {
+    router.get('/notifications/read');
 }
 
 function DetailRow({ label, value }) {

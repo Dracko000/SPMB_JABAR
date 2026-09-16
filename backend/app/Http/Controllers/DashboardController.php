@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,6 +11,16 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     public function __construct(private readonly DashboardService $svc) {}
+
+    /** Mark a pendaftar's notifications all read (design §5.3). Redirect back. */
+    public function markRead(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        Notification::where('user_id', $request->user()->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return redirect('/dashboard');
+    }
 
     public function show(Request $request): Response
     {
