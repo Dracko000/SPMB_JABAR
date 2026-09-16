@@ -10,8 +10,20 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    $period = \App\Models\AdmissionPeriod::where('is_active', true)->first();
+
     return Inertia::render('Landing', [
         'name' => 'Warga Jabar',
+        'year' => $period?->year,
+        'period' => $period ? [
+            'opens' => $period->registration_start ? \Illuminate\Support\Carbon::parse($period->registration_start)->toDateString() : null,
+            'closes' => $period->registration_end ? \Illuminate\Support\Carbon::parse($period->registration_end)->toDateString() : null,
+        ] : null,
+        'stats' => [
+            'schools' => \App\Models\School::where('is_active', true)->count(),
+            'paths' => \App\Models\AdmissionPath::where('is_active', true)->count(),
+            'kuota' => \App\Models\Quota::sum('kuota'),
+        ],
     ]);
 })->name('landing');
 
