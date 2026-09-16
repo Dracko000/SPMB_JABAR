@@ -71,6 +71,24 @@ it('releases a seat on perbaikan too — a fresh submission re-reserves', functi
     expect($quota->fresh()->terisi)->toBe(0);
 });
 
+it('a rejected registration cannot be re-reviewed — no double release', function () {
+    $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
+    $school = School::query()->firstOrFail();
+    $quota = Quota::updateOrCreate(['school_id' => $school->id, 'admission_path_id' => $path->id], ['kuota' => 3, 'terisi' => 1]);
+
+    [$operator, ] = qr_Operator((int) $school->id);
+    $student = Student::query()->firstOrFail();
+    $reg = qr_Registration($student, $path->id, [$school->id]);
+
+    app(VerificationFlow::class)->review($reg, $operator, 'ditolak');
+    expect($quota->fresh()->terisi)->toBe(0);
+
+    // Second (duplicate) review must be refused, not release again.
+    expect(fn () => app(VerificationFlow::class)->review($reg, $operator, 'ditolak'))
+        ->toThrow(\InvalidArgumentException::class);
+    expect($quota->fresh()->terisi)->toBe(0);
+});
+
 it('release is a no-op when no seat was reserved', function () {
     $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
     $school = School::query()->firstOrFail();
