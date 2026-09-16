@@ -83,17 +83,18 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'path_id' => ['required', 'exists:admission_paths,id,admission_period_id,'.$period->id],
-            'score_weight' => ['required', 'numeric', 'min:0', 'max:1'],
+            'score_weight' => [
+                'required', 'numeric', 'min:0', 'max:1',
+                // Weights are a budget over CompositeScore (design §7) — cap the
+                // sum so the normalized 0-100 frame isn't broken by 1.0 + 1.0.
+                fn ($attribute, $value, $fail) => ((float) $value + (float) request('distance_weight', 0)) > 1
+                    ? $fail('Bobot skor + jarak tidak boleh melebihi 1.')
+                    : null,
+            ],
             'distance_weight' => ['required', 'numeric', 'min:0', 'max:1'],
             'tie_break' => ['required', 'string', 'in:date_submitted_asc,age_youngest'],
             'is_active' => ['nullable', 'boolean'],
         ]);
-
-        // Weights are a budget over CompositeScore (design §7) — cap the sum so
-        // the normalized 0-100 frame isn't broken by e.g. 1.0 + 1.0 → 200.
-        if ($validated['score_weight'] + $validated['distance_weight'] > 1) {
-            return back()->withErrors(['score_weight' => 'Bobot skor + jarak tidak boleh melebihi 1.'])->withInput();
-        }
 
         $this->rules->upsert($period, (int) $validated['path_id'], $request->user()->id, $validated);
 
