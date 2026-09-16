@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Document;
 use App\Support\Audit;
+use App\Support\NotificationBus;
 use Illuminate\Http\UploadedFile;
 
 /**
@@ -12,6 +13,8 @@ use Illuminate\Http\UploadedFile;
  */
 class DocumentService
 {
+    public function __construct(private readonly NotificationBus $notifications) {}
+
     public function store(int $registrationId, string $nisn, string $type, UploadedFile $file): Document
     {
         $path = $file->store("documents/{$nisn}", 'local');
@@ -37,6 +40,13 @@ class DocumentService
             'status' => $status,
             'catatan' => $catatan,
         ]);
+
+        if ($status === 'perbaikan') {
+            $user = $document->registration?->user_id;
+            if ($user) {
+                $this->notifications->dispatch('document.revision', $user, ['document_id' => $document->id]);
+            }
+        }
 
         return $document;
     }

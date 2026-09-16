@@ -8,7 +8,9 @@ use App\Models\Registration;
 use App\Models\RegistrationChoice;
 use App\Models\Student;
 use App\Models\User;
+use App\Engines\VerificationEngine;
 use App\Support\Audit;
+use App\Support\NotificationBus;
 use Illuminate\Support\Str;
 
 /**
@@ -17,7 +19,11 @@ use Illuminate\Support\Str;
  */
 class RegistrationFlow
 {
-    public function __construct(private readonly QuotaService $quota) {}
+    public function __construct(
+        private readonly QuotaService $quota,
+        private readonly VerificationEngine $verification,
+        private readonly NotificationBus $notifications,
+    ) {}
 
     public function activePeriod(): ?AdmissionPeriod
     {
@@ -103,6 +109,14 @@ class RegistrationFlow
         }
 
         $registration->update(['status' => 'submitted']);
+
+        $this->verification->run($registration->fresh());
+        if ($registration->user_id) {
+            $this->notifications->dispatch('registration.submitted', $registration->user_id, [
+                'registration_id' => $registration->id,
+                'no_pendaftaran' => $registration->no_pendaftaran,
+            ]);
+        }
 
         Audit::log('registration.submitted', ['registration_id' => $registration->id]);
 

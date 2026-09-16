@@ -6,6 +6,7 @@ use App\Models\Registration;
 use App\Models\User;
 use App\Models\Verification;
 use App\Support\Audit;
+use App\Support\NotificationBus;
 
 /**
  * operator_sekolah reviews school-scoped submissions (PRD §20). Every
@@ -13,6 +14,8 @@ use App\Support\Audit;
  */
 class VerificationFlow
 {
+    public function __construct(private readonly NotificationBus $notifications) {}
+
     public function review(
         Registration $registration,
         User $actor,
@@ -44,6 +47,14 @@ class VerificationFlow
             'status' => $status,
             'catatan' => $catatan,
         ]);
+
+        if ($registration->user_id) {
+            $this->notifications->dispatch(
+                $status === 'valid' ? 'registration.verified' : ($status === 'ditolak' ? 'registration.rejected' : 'document.revision'),
+                $registration->user_id,
+                ['registration_id' => $registration->id, 'status' => $status],
+            );
+        }
 
         return $verification;
     }
