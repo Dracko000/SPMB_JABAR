@@ -71,12 +71,14 @@ Suite memakai DB Postgres `spmb_jabar_test` (migrasi + seeder otomatis).
 
 ```
 app/Http/Controllers   — lapisan HTTP tipis
+app/Engines            — mesin domain: VerificationEngine, SelectionEngine
 app/Services           — domain: AuthFlow, RegistrationFlow, VerificationFlow,
                          QuotaService, DocumentService, ComplaintService,
-                         DashboardService
+                         DashboardService, SelectionRuleManager
+app/Channels           — saluran NotificationBus: DatabaseChannel, LogChannel
 app/Integration        — DataIntegrationGateway (kontrak) + Adapters/MockAdapter
 app/Models             — Eloquent untuk semua entitas
-app/Support            — Audit (log jejak) & Masking (NIK/NISN)
+app/Support            — Audit (log jejak), Masking (NIK/NISN), NotificationBus
 app/Policies           — (diwakili middleware role + pemeriksaan ruang lingkup)
 database/migrations    — skema semua entitas
 database/seeders       — referensi + data mock
@@ -96,3 +98,4 @@ Keputusan arsitektur selengkapnya: `docs/superpowers/specs/2026-09-14-spmb-jabar
    sekolahnya; keputusan di-audit.
 4. **Dashboard** — pendaftar, operator, admin kabkota, admin provinsi.
 5. **Pengaduan** — tiket unik (`ticket_no`), alur `dibuat → diproses → selesai`.
+6. **Seleksi (engine)** — admin_provinsi atur aturan jalur (bobot/skor + jarak + tie-break) → dry-run → publikasi hasil; konsumen `registration.verified`, perperingkat, dibatasi kuota. Notifikasi (DB + log) di setiap transisi: submit, verifikasi, revisi dokumen, hasil seleksi.
