@@ -28,12 +28,6 @@ final class SelectionRuleManager
             array_merge($validated, ['is_active' => $validated['is_active'] ?? true, 'created_by' => $actorId]),
         );
 
-        Audit::log('selection.rule_updated', [
-            'rule_id' => $rule->id,
-            'path_id' => $pathId,
-            'weights' => [$validated['score_weight'], $validated['distance_weight']],
-        ]);
-
         return $rule;
     }
 }

@@ -26,7 +26,7 @@ class DocumentService
             'status' => 'menunggu',
         ]);
 
-        Audit::log('document.uploaded', ['document_id' => $document->id, 'type' => $type]);
+        Audit::log('document.uploaded', ['document_id' => $document->id, 'type' => $type], $document);
 
         return $document;
     }
@@ -39,7 +39,7 @@ class DocumentService
             'document_id' => $document->id,
             'status' => $status,
             'catatan' => $catatan,
-        ]);
+        ], $document);
 
         if ($status === 'perbaikan') {
             $user = $document->registration?->user_id;

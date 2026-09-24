@@ -2,7 +2,6 @@
 
 use App\Models\OtpCode;
 use App\Models\Student;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -47,7 +46,7 @@ it('logs an audit entry for OTP send', function () {
 
     $this->post('/auth/otp/send', ['nisn' => $student->nisn]);
 
-    $this->assertDatabaseHas('audit_logs', ['action' => 'auth.otp.sent']);
+    $this->assertDatabaseHas('audit_logs', ['event' => 'auth.otp.sent']);
 });
 
 it('verifies a correct OTP, opens a session, and links the pendaftar', function () {
@@ -74,7 +73,7 @@ it('verifies a correct OTP, opens a session, and links the pendaftar', function 
     expect($user->role)->toBe('pendaftar');
     expect($user->student_id)->toBe($student->id);
 
-    $this->assertDatabaseHas('audit_logs', ['action' => 'auth.otp.verified']);
+    $this->assertDatabaseHas('audit_logs', ['event' => 'auth.otp.verified']);
     $this->assertNotNull($otp->fresh()->verified_at);
 });
 

@@ -1,11 +1,13 @@
 <?php
 
 use App\Models\AdmissionPath;
-use App\Models\Registration;
+use App\Models\Document;
 use App\Models\Quota;
+use App\Models\Registration;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\RegistrationFlow;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function submittedRegistration(School $school, AdmissionPath $path): Registration
@@ -14,10 +16,28 @@ function submittedRegistration(School $school, AdmissionPath $path): Registratio
     $quota->update(['terisi' => 0]);
 
     $user = User::factory()->create(['student_id' => Student::query()->firstOrFail()->id, 'role' => 'pendaftar']);
-    $flow = app(\App\Services\RegistrationFlow::class);
+    $flow = app(RegistrationFlow::class);
     $flow->pickPath($flow->draftOrCreate($user), $path->code);
     $reg = $flow->draftOrCreate($user);
     $flow->setChoices($reg, [$school->id]);
+
+    // The refactored submit contract validates mandatory documents per path
+    // before reserving quota, so pre-upload what the path requires.
+    $required = match ($path->code) {
+        'afirmasi' => ['KK', 'KIP', 'SKTM'],
+        'prestasi' => ['KK', 'Sertifikat_Prestasi'],
+        'mutasi' => ['KK', 'Surat_Mutasi'],
+        default => ['KK', 'Ijazah'], // zonasi
+    };
+    foreach ($required as $type) {
+        Document::create([
+            'registration_id' => $reg->id,
+            'type' => $type,
+            'path' => "documents/dummy/{$type}.pdf",
+            'status' => 'menunggu',
+        ]);
+    }
+
     $flow->submit($reg);
 
     return $reg->fresh();
@@ -50,12 +70,17 @@ it('lets the operator verify a scoped registration', function () {
 
     $this->actingAs($operator)->post("/verifikasi/{$reg->id}/review", [
         'status' => 'valid',
+        'is_kk_verified' => 1,
+        'is_ijazah_verified' => 1,
+        'is_alamat_verified' => 1,
         'catatan' => 'dokumen lengkap',
     ])->assertRedirect();
 
     expect($reg->fresh()->status)->toBe('verified');
+    expect($reg->fresh()->only(['is_kk_verified', 'is_ijazah_verified', 'is_alamat_verified']))
+        ->toBe(['is_kk_verified' => true, 'is_ijazah_verified' => true, 'is_alamat_verified' => true]);
     $this->assertDatabaseHas('verifications', ['registration_id' => $reg->id, 'status' => 'valid']);
-    $this->assertDatabaseHas('audit_logs', ['action' => 'registration.verified']);
+    $this->assertDatabaseHas('audit_logs', ['event' => 'registration.verified']);
 });
 
 it('forbids reviewing a registration that did not choose my school', function () {
@@ -66,8 +91,20 @@ it('forbids reviewing a registration that did not choose my school', function ()
     $reg = submittedRegistration($school1, $path);
     $otherOperator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school2->id]);
 
-    $this->actingAs($otherOperator)->post("/verifikasi/{$reg->id}/review", ['status' => 'valid'])
-        ->assertStatus(403);
+    $before = $reg->fresh()->only(['status', 'is_kk_verified', 'is_ijazah_verified', 'is_alamat_verified']);
+
+    $this->actingAs($otherOperator)->post("/verifikasi/{$reg->id}/review", [
+        'status' => 'valid',
+        'is_kk_verified' => 1,
+        'is_ijazah_verified' => 1,
+        'is_alamat_verified' => 1,
+    ])->assertStatus(403);
+
+    // The 403 must leave the row untouched: an out-of-scope reviewer may not
+    // persist document flags (or any other write) before the scope check.
+    expect($reg->fresh()->only(['status', 'is_kk_verified', 'is_ijazah_verified', 'is_alamat_verified']))
+        ->toBe($before);
+    $this->assertDatabaseMissing('verifications', ['registration_id' => $reg->id]);
 });
 
 it('denies pendaftar access to operator endpoints', function () {

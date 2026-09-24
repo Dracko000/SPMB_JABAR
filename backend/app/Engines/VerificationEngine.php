@@ -2,71 +2,90 @@
 
 namespace App\Engines;
 
-use App\Integration\DataIntegrationGateway;
 use App\Models\Registration;
-use App\Support\Audit;
+use App\Services\DistanceService;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
-/**
- * Advisory verification at submit-time (PRD §12). Compares the confirmed
- * student fields against the gateway's canonical record. Writes evidence +
- * verdict to registrations.verification_evidence but does NOT transition
- * status — the operator's review() remains the status authority.
- */
-final class VerificationEngine
+class VerificationEngine
 {
-    public function __construct(private readonly DataIntegrationGateway $gateway) {}
+    public function __construct(private readonly DistanceService $distance) {}
 
-    public function run(Registration $registration): array
+    /**
+     * Run initial automated verification on a registration.
+     */
+    public function run(Registration $registration): void
     {
-        $student = $registration->student;
-        $record = $this->gateway->lookupByNisn($student->nisn);
+        Log::info("VerificationEngine: Running initial check for Reg #{$registration->id}");
 
-        $comparators = [
-            'nisn' => [$student->nisn, $record->nisn],
-            'nik' => [$student->nik, $record->nik],
-            'nama' => [$student->nama, $record->nama],
-            'tempat_lahir' => [$student->tempat_lahir, $record->tempatLahir],
-            'tanggal_lahir' => [$student->tanggal_lahir?->toDateString(), $record->tanggalLahir?->toDateString()],
-            'jenis_kelamin' => [$student->jenis_kelamin, $record->jenisKelamin],
-            'sekolah_asal' => [$student->educationRecord?->sekolah_asal, $record->sekolahAsal],
-            'nama_ayah' => [$student->parent?->nama_ayah, $record->namaAyah],
-            'nama_ibu' => [$student->parent?->nama_ibu, $record->namaIbu],
-        ];
+        $student = $registration->user->student;
+        $address = $student->address;
+        $errors = [];
 
-        $fields = [];
-        $anyFail = false;
-        $hasSkips = false;
-
-        foreach ($comparators as $key => [$submitted, $source]) {
-            if ($submitted === null || $source === null) {
-                $fields[$key] = 'SKIP';
-                $hasSkips = true;
-                continue;
-            }
-            $match = strtolower(trim((string) $submitted)) === strtolower(trim((string) $source));
-            $fields[$key] = $match ? 'PASS' : 'FAIL';
-            $anyFail = $anyFail || ! $match;
+        // 1. Cek Kelengkapan Data Integrasi
+        if (empty($student->nik)) {
+            $errors[] = 'NIK belum terverifikasi.';
         }
 
-        // Design doc §3 / brief Interface line: only an ALL-PASS comparison is
-        // VALID; any SKIP (partial evidence, even without FAIL) needs review.
-        $verdict = $anyFail
-            ? 'DATA TIDAK SESUAI'
-            : ($hasSkips ? 'PERLU VERIFIKASI' : 'VALID');
+        // 2. Cek Umur (Simulasi: Minimal 12 tahun)
+        if ($student->tanggal_lahir) {
+            $birthDate = Carbon::parse($student->tanggal_lahir);
+            if ($birthDate->diffInYears(now()) < 12) {
+                $errors[] = 'Usia siswa tidak memenuhi syarat minimum.';
+            }
+        }
 
-        $registration->update([
-            'verification_evidence' => [
-                'verdict' => $verdict,
-                'fields' => $fields,
-                'run_at' => now()->toIso8601String(),
-            ],
-        ]);
+        // 3. Hitung Jarak Domisili untuk Pilihan Sekolah Utama (Zonasi Support)
+        $firstChoice = $registration->choices->first();
+        if ($firstChoice && $address && $firstChoice->school) {
+            $school = $firstChoice->school;
+            if ($address->latitude && $address->longitude && $school->latitude && $school->longitude) {
+                $dist = $this->distance->calculate(
+                    (float) $address->latitude, (float) $address->longitude,
+                    (float) $school->latitude, (float) $school->longitude
+                );
+                $student->update(['jarak_domisili_km' => $dist]);
+                Log::info("VerificationEngine: Calculated distance for Reg #{$registration->id}: {$dist} km");
+            } else {
+                Log::warning("VerificationEngine: Missing coordinates for Reg #{$registration->id}");
+            }
+        }
 
-        Audit::log('registration.verified_engine', [
-            'registration_id' => $registration->id,
-            'verdict' => $verdict,
-        ]);
+        // 4. Cek Dokumen Wajib berdasarkan Jalur
+        $requiredDocs = $this->getRequiredDocsForPath($registration->admission_path_id);
+        $uploadedDocs = $registration->documents()->pluck('type')->toArray();
 
-        return $fields;
+        foreach ($requiredDocs as $docType) {
+            if (! in_array($docType, $uploadedDocs)) {
+                $errors[] = "Dokumen {$docType} wajib diunggah untuk jalur ini.";
+            }
+        }
+
+        if (! empty($errors)) {
+            $registration->update([
+                'status' => 'perlu_perbaikan',
+                'verification_notes' => implode(' | ', $errors),
+            ]);
+            Log::warning("VerificationEngine: Registration #{$registration->id} failed initial check: ".implode(', ', $errors));
+        } else {
+            $registration->update([
+                'status' => 'terverifikasi_awal',
+            ]);
+            Log::info("VerificationEngine: Registration #{$registration->id} passed initial check.");
+        }
+    }
+
+    /**
+     * Get mandatory document types based on admission path.
+     */
+    private function getRequiredDocsForPath(int $pathId): array
+    {
+        return match ($pathId) {
+            1 => ['KK', 'Ijazah'], // Zonasi
+            2 => ['KK', 'KIP', 'SKTM'], // Afirmasi
+            3 => ['KK', 'Sertifikat_Prestasi'], // Prestasi
+            4 => ['KK', 'Surat_Mutasi'], // Mutasi
+            default => ['KK'],
+        };
     }
 }

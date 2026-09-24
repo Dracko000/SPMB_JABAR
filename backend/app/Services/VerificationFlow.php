@@ -18,6 +18,7 @@ class VerificationFlow
     public function __construct(
         private readonly NotificationBus $notifications,
         private readonly QuotaService $quota,
+        private readonly NotificationService $notifier,
     ) {}
 
     public function review(
@@ -25,6 +26,7 @@ class VerificationFlow
         User $actor,
         string $status,
         ?string $catatan = null,
+        array $flags = [],
     ): Verification {
         if (! in_array($status, ['valid', 'ditolak', 'perbaikan'], true)) {
             throw new \InvalidArgumentException('Status verifikasi tidak valid.');
@@ -33,7 +35,9 @@ class VerificationFlow
         // A rejected registration is terminal and a draft is not reviewable —
         // repeated/duplicate reviews would otherwise re-release seats already
         // freed (double-click submit, or another school re-reviewing the row).
-        if (! in_array($registration->status, ['submitted', 'perbaikan', 'verified'], true)) {
+        // 'terverifikasi_awal' is included: auto-verified submissions still need
+        // the operator's document/address sign-off (review → valid/ditolak/perbaikan).
+        if (! in_array($registration->status, ['submitted', 'terverifikasi_awal', 'perbaikan', 'verified'], true)) {
             throw new \InvalidArgumentException('Registrasi ini tidak dapat diverifikasi ulang.');
         }
 
@@ -45,8 +49,10 @@ class VerificationFlow
         }
 
         // Verify + free seats atomically: a failure mid-loop must not leave a
-        // registration re-statused while its reserved seats stay stuck.
-        $verification = DB::transaction(function () use ($registration, $actor, $status, $catatan) {
+        // registration re-statused while its reserved seats stay stuck. The
+        // document flags are written here too — only after the scope check
+        // above, so an out-of-scope reviewer can never touch the row.
+        $verification = DB::transaction(function () use ($registration, $actor, $status, $catatan, $flags) {
             $verification = Verification::create([
                 'registration_id' => $registration->id,
                 'actor_id' => $actor->id,
@@ -54,7 +60,16 @@ class VerificationFlow
                 'catatan' => $catatan,
             ]);
 
-            $registration->update(['status' => $status === 'valid' ? 'verified' : $status]);
+            $update = ['status' => $status === 'valid' ? 'verified' : $status];
+
+            // Whitelist — only the three review flags may come through.
+            foreach (['is_kk_verified', 'is_ijazah_verified', 'is_alamat_verified'] as $key) {
+                if (array_key_exists($key, $flags)) {
+                    $update[$key] = (bool) $flags[$key];
+                }
+            }
+
+            $registration->update($update);
 
             // Rejected/needs-revision registrations free their reserved seats so
             // the pool reflects only live reservations. A nontransitional
@@ -73,13 +88,21 @@ class VerificationFlow
             'registration_id' => $registration->id,
             'status' => $status,
             'catatan' => $catatan,
-        ]);
+        ], $registration);
 
         if ($registration->user_id) {
+            // 1. Internal Notification (App/Database)
             $this->notifications->dispatch(
                 $status === 'valid' ? 'registration.verified' : ($status === 'ditolak' ? 'registration.rejected' : 'document.revision'),
                 $registration->user_id,
                 ['registration_id' => $registration->id, 'status' => $status],
+            );
+
+            // 2. External Notification (Email/WA Proxy)
+            $this->notifier->notifyStatusChange(
+                $registration,
+                $status === 'valid' ? 'verified' : $status,
+                $catatan
             );
         }
 

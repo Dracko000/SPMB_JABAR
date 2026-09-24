@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SelectionRule extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'admission_period_id', 'admission_path_id', 'score_weight',
         'distance_weight', 'tie_break', 'is_active', 'created_by',

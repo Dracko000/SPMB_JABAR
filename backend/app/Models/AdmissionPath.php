@@ -18,4 +18,9 @@ class AdmissionPath extends Model
     {
         return $this->hasMany(SelectionRule::class);
     }
+
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
 }

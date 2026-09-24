@@ -2,6 +2,7 @@
 
 use App\Models\AdmissionPath;
 use App\Models\AdmissionPeriod;
+use App\Models\Quota;
 use App\Models\Registration;
 use App\Models\RegistrationChoice;
 use App\Models\School;
@@ -20,7 +21,7 @@ it('admin provinsi can publish selection results', function () {
     $admin = User::where('role', 'admin_provinsi')->firstOrFail();
     $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
     $school = School::query()->firstOrFail();
-    \App\Models\Quota::updateOrCreate(['school_id' => $school->id, 'admission_path_id' => $path->id], ['kuota' => 1, 'terisi' => 0]);
+    Quota::updateOrCreate(['school_id' => $school->id, 'admission_path_id' => $path->id], ['kuota' => 1, 'terisi' => 0]);
 
     $student = Student::query()->orderByDesc('id')->firstOrFail();
     $period = AdmissionPeriod::where('is_active', true)->firstOrFail();

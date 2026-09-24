@@ -33,12 +33,12 @@ class RegionSchoolSeeder extends Seeder
         }
 
         $schools = [
-            ['npsn' => '20219801', 'name' => 'SMPN 1 Bandung',   'region' => '3204', 'capacity' => 320],
-            ['npsn' => '20219802', 'name' => 'SMPN 2 Bandung',   'region' => '3204', 'capacity' => 288],
-            ['npsn' => '20219803', 'name' => 'SMPN 1 Cianjur',   'region' => '3203', 'capacity' => 256],
-            ['npsn' => '20219804', 'name' => 'SMPN 1 Bogor',     'region' => '3201', 'capacity' => 300],
-            ['npsn' => '20219805', 'name' => 'SMPN 3 Depok',     'region' => '3276', 'capacity' => 240],
-            ['npsn' => '20219806', 'name' => 'SMPN 5 Sukabumi',  'region' => '3202', 'capacity' => 224],
+            ['npsn' => '20219801', 'name' => 'SMAN 1 Bandung',   'region' => '3273', 'capacity' => 320],
+            ['npsn' => '20219802', 'name' => 'SMAN 3 Bandung',   'region' => '3273', 'capacity' => 288],
+            ['npsn' => '20219803', 'name' => 'SMAN 1 Cianjur',   'region' => '3203', 'capacity' => 256],
+            ['npsn' => '20219804', 'name' => 'SMAN 1 Bogor',     'region' => '3201', 'capacity' => 300],
+            ['npsn' => '20219805', 'name' => 'SMAN 1 Depok',     'region' => '3276', 'capacity' => 240],
+            ['npsn' => '20219806', 'name' => 'SMAN 1 Sukabumi',  'region' => '3202', 'capacity' => 224],
         ];
 
         foreach ($schools as $s) {

@@ -11,6 +11,7 @@ use App\Models\School;
 use App\Models\SelectionResult;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\VerificationFlow;
 
 function se_Registration(Student $student, int $pathId, array $choices): Registration
 {
@@ -141,7 +142,7 @@ it('reconciles quota to verified count with stale reservations released', functi
     // Phase 2: operator rejects (a) → its seat releases; (b) stays verified.
     $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
     $regA = Registration::where('admission_period_id', $period->id)->where('student_id', $a->id)->firstOrFail();
-    app(\App\Services\VerificationFlow::class)->review($regA, $operator, 'ditolak');
+    app(VerificationFlow::class)->review($regA, $operator, 'ditolak');
 
     expect(Quota::where('school_id', $school->id)->where('admission_path_id', $path->id)->value('terisi'))->toBe(1);
 });

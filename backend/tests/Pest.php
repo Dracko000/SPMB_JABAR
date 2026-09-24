@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Connection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,6 +31,6 @@ expect()->extend('toBeInDatabase', function (string $table, array $attributes = 
     $database = $this->value;
 
     $this->assertTrue(
-        app(\Illuminate\Database\Connection::class)->table($table)->where($attributes)->exists()
+        app(Connection::class)->table($table)->where($attributes)->exists()
     );
 });

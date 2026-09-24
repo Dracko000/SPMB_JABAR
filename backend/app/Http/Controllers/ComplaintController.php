@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Complaint;
 use App\Services\ComplaintService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,7 +27,7 @@ class ComplaintController extends Controller
         ]);
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'category' => ['required', 'string', 'in:'.implode(',', ComplaintService::CATEGORIES)],
@@ -39,14 +40,16 @@ class ComplaintController extends Controller
         return back()->with('flash', ['success' => 'Pengaduan dikirim.']);
     }
 
-    public function respond(Request $request, Complaint $complaint): \Illuminate\Http\RedirectResponse
+    public function respond(Request $request, Complaint $complaint): RedirectResponse
     {
         $validated = $request->validate([
             'status' => ['required', 'in:dibuat,diproses,selesai'],
-            'response' => ['nullable', 'string', 'max:255'],
+            'response' => ['nullable', 'string', 'max:500'],
+            'priority' => ['required', 'string', 'in:low,medium,high'],
+            'internal_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $this->svc->respond($request->user()->id, $complaint, $validated['status'], $validated['response'] ?? null);
+        $this->svc->respond($request->user()->id, $complaint, $validated);
 
         return back()->with('flash', ['success' => 'Tanggapan disimpan.']);
     }

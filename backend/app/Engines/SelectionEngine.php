@@ -57,7 +57,7 @@ final class SelectionEngine
                 $this->notifications->dispatch('selection.published', (int) $recipientByRegistration[$row['registration_id']], $row);
             }
         }
-        Audit::log('selection.published', ['period_id' => $period->id, 'results' => count($rows)]);
+        Audit::log('selection.published', ['period_id' => $period->id, 'results' => count($rows)], $period);
 
         return $this->groupPreview($rows);
     }
@@ -125,6 +125,7 @@ final class SelectionEngine
                 ->sortBy(function ($score, $id) use ($cands, $rule) {
                     if ($rule->tie_break === 'age_youngest') {
                         $birthdate = $cands[$id][0]['birthdate'];
+
                         // Null birthdate treated as oldest — sorts last among ties.
                         return [-$score, $birthdate ? -$birthdate->timestamp : PHP_INT_MAX];
                     }

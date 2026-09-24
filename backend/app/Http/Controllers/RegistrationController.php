@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreRegistrationRequest;
 use App\Models\AdmissionPath;
 use App\Models\School;
 use App\Services\DocumentService;
 use App\Services\RegistrationFlow;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -67,12 +69,9 @@ class RegistrationController extends Controller
         return back()->with('flash', ['success' => 'Pilihan sekolah disimpan.']);
     }
 
-    public function uploadDocument(Request $request): \Symfony\Component\HttpFoundation\Response
+    public function uploadDocument(StoreRegistrationRequest $request): \Symfony\Component\HttpFoundation\Response
     {
-        $validated = $request->validate([
-            'type' => ['required', 'string', 'max:30'],
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
-        ]);
+        $validated = $request->validated();
 
         $registration = $this->flow->draftOrCreate($request->user());
 
@@ -90,7 +89,7 @@ class RegistrationController extends Controller
         return back()->with('flash', ['success' => 'Dokumen diunggah.']);
     }
 
-    public function submit(Request $request): \Illuminate\Http\RedirectResponse
+    public function submit(Request $request): RedirectResponse
     {
         $registration = $this->flow->draftOrCreate($request->user());
 

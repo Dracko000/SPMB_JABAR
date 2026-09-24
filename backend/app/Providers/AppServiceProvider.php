@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Channels\DatabaseChannel;
+use App\Channels\LogChannel;
 use App\Integration\Adapters\MockAdapter;
 use App\Integration\DataIntegrationGateway;
+use App\Support\NotificationBus;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,10 +19,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(DataIntegrationGateway::class, MockAdapter::class);
 
-        $this->app->singleton(\App\Support\NotificationBus::class, function ($app) {
-            return new \App\Support\NotificationBus([
-                $app->make(\App\Channels\DatabaseChannel::class),
-                $app->make(\App\Channels\LogChannel::class),
+        $this->app->singleton(NotificationBus::class, function ($app) {
+            return new NotificationBus([
+                $app->make(DatabaseChannel::class),
+                $app->make(LogChannel::class),
             ]);
         });
     }
@@ -28,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (str_starts_with(config('app.url'), 'https')) {
+            URL::forceScheme('https');
+        }
     }
 }

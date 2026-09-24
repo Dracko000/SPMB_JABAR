@@ -4,48 +4,52 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentViewController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    $period = \App\Models\AdmissionPeriod::where('is_active', true)->first();
+Route::get('/', [PublicController::class, 'info'])->name('landing');
 
-    return Inertia::render('Landing', [
-        'name' => 'Warga Jabar',
-        'year' => $period?->year,
-        'period' => $period ? [
-            'opens' => $period->registration_start ? \Illuminate\Support\Carbon::parse($period->registration_start)->toDateString() : null,
-            'closes' => $period->registration_end ? \Illuminate\Support\Carbon::parse($period->registration_end)->toDateString() : null,
-        ] : null,
-        'stats' => [
-            'schools' => \App\Models\School::where('is_active', true)->count(),
-            'paths' => \App\Models\AdmissionPath::where('is_active', true)->count(),
-            'kuota' => \App\Models\Quota::sum('kuota'),
-        ],
-    ]);
-})->name('landing');
+// Public information
+Route::get('info', [PublicController::class, 'info'])->name('public.info');
+Route::get('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1')->name('public.announcement');
+Route::post('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1')->name('public.announcement.post');
+Route::get('public/directory', [PublicController::class, 'directory'])->name('public.directory');
+Route::get('public/downloads', [PublicController::class, 'downloads'])->name('public.downloads');
 
-// --- Auth (NISN → OTP → session) ---
+// --- Auth ---
+Route::middleware('guest')->group(function () {
+    // Unified login for all roles (Staff & Students)
+    Route::get('login', [AuthController::class, 'loginPage'])->name('login');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:3,1');
+});
+
+// Legacy OTP flow (keep if still needed for some, otherwise can be removed)
 Route::get('auth/nisn', [AuthController::class, 'nisn'])->name('auth.nisn');
 Route::post('auth/nisn', [AuthController::class, 'lookup'])->middleware('throttle:10,1')->name('auth.lookup');
-Route::post('auth/otp/send', [AuthController::class, 'sendOtp'])->middleware('throttle:5,1')->name('auth.otp.send');
-Route::post('auth/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:5,1')->name('auth.otp.verify');
-
-// Staff password login — the `auth` middleware redirects guests to route('login').
-Route::middleware('guest')->group(function () {
-    Route::get('login', [AuthController::class, 'staffLoginPage'])->name('login');
-    Route::post('login', [AuthController::class, 'staffLogin'])->middleware('throttle:5,1');
-});
+Route::post('auth/otp/send', [AuthController::class, 'sendOtp'])->middleware('throttle:3,1')->name('auth.otp.send');
+Route::post('auth/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:3,1')->name('auth.otp.verify');
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
+    // Two Factor Auth Flow
+    Route::get('auth/two-factor/verify', [AuthController::class, 'showTwoFactorPage'])->name('auth.two-factor.verify');
+    Route::post('auth/two-factor/verify', [AuthController::class, 'verifyTwoFactor'])->name('auth.two-factor.verify.post');
+    Route::get('auth/two-factor/setup', [AuthController::class, 'showTwoFactorSetup'])->name('auth.two-factor.setup');
+    Route::post('auth/two-factor/enable', [AuthController::class, 'enableTwoFactor'])->name('auth.two-factor.enable');
+
     Route::get('dashboard', [DashboardController::class, 'show'])->name('dashboard.pendaftar');
     Route::post('notifications/read', [DashboardController::class, 'markRead'])->name('notifications.read');
 
+    // Document access
+    // Document access
+    Route::get('documents/view/{id}', [DocumentViewController::class, 'show'])->name('documents.view');
+
     // Registry (pendaftar)
+
     Route::prefix('pendaftaran')->name('registration.')->middleware(['role:pendaftar'])->group(function () {
         Route::get('/', [RegistrationController::class, 'show'])->name('show');
         Route::post('path', [RegistrationController::class, 'pickPath'])->name('path');
@@ -64,10 +68,31 @@ Route::middleware('auth')->group(function () {
         Route::post('{registration}/review', [VerificationController::class, 'review'])->name('review');
     });
 
+    // School Management — operator_sekolah
+    Route::prefix('sekolah')->middleware(['role:operator_sekolah'])->name('school.')->group(function () {
+        Route::get('/', [SchoolController::class, 'index'])->name('index');
+        Route::post('quota-request', [SchoolController::class, 'requestQuota'])->name('quota.request');
+    });
+
+    // SMP Management — operator_smp
+    Route::prefix('smp')->middleware(['role:operator_smp'])->name('smp.')->group(function () {
+        Route::get('/', [SmpController::class, 'index'])->name('index');
+        Route::post('students', [SmpController::class, 'storeStudent'])->name('students.store');
+        Route::delete('students/{student}', [SmpController::class, 'destroyStudent'])->name('students.destroy');
+    });
+
     // Admin — provinsi / kabkota
-    Route::prefix('admin')->middleware(['role:admin_provinsi,admin_kabkota'])->name('admin.')->group(function () {
+    Route::prefix('admin')->middleware(['role:admin_provinsi,admin_kabkota', 'two.factor'])->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('index');
+        Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
+        Route::post('users/role', [UserManagementController::class, 'updateRole'])->name('users.role.update');
+        Route::get('export-results', [AdminController::class, 'exportResults'])->name('results.export');
+        Route::get('export-results-pdf', [AdminController::class, 'exportPdfResults'])->name('results.export.pdf');
+        Route::get('export', [AdminController::class, 'export'])->name('export');
         Route::post('kuota', [AdminController::class, 'approveQuota'])->name('kuota');
+        Route::post('kuota/process', [AdminController::class, 'processQuotaRequest'])->name('kuota.process');
+        Route::post('periode/update', [AdminController::class, 'updatePathPeriod'])->name('admin.path.period.update');
+        Route::post('periode/distribution', [AdminController::class, 'updateGlobalDistribution'])->name('admin.distribution.update');
         Route::post('pengaduan/{complaint}/respond', [ComplaintController::class, 'respond'])->name('complaint.respond');
 
         // Selection ops are provinsi-ONLY (design §7) — narrow the guard here.

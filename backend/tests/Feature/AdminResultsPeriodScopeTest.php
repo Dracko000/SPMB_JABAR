@@ -1,16 +1,18 @@
 <?php
 
+use App\Models\AdmissionPath;
 use App\Models\AdmissionPeriod;
 use App\Models\Registration;
 use App\Models\School;
 use App\Models\SelectionResult;
 use App\Models\Student;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia;
 
 it('admin selection results are scoped to the active period only', function () {
     $admin = User::where('role', 'admin_provinsi')->firstOrFail();
     $active = AdmissionPeriod::where('is_active', true)->firstOrFail();
-    $path = \App\Models\AdmissionPath::where('code', 'prestasi')->firstOrFail();
+    $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
     $school = School::query()->firstOrFail();
     $student = Student::query()->firstOrFail();
 
@@ -22,7 +24,7 @@ it('admin selection results are scoped to the active period only', function () {
         'is_active' => false,
     ]);
     $student = Student::query()->firstOrFail();
-    $path = \App\Models\AdmissionPath::where('code', 'prestasi')->firstOrFail();
+    $path = AdmissionPath::where('code', 'prestasi')->firstOrFail();
     $school = School::query()->firstOrFail();
     $reg = Registration::create([
         'no_pendaftaran' => 'SPMB'.(now()->year - 1).'X'.random_int(10000000, 99999999),
@@ -61,7 +63,7 @@ it('admin selection results are scoped to the active period only', function () {
 
     $this->actingAs($admin)->get('/admin')
         ->assertOk()
-        ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+        ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Admin/Dashboard')
             ->has('selectionResults', 1));
 });

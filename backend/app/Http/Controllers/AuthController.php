@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Integration\Exceptions\StudentNotFoundException;
+use App\Models\User;
 use App\Services\AuthFlow;
+use App\Services\TwoFactorAuthService;
+use App\Support\Masking;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -14,40 +18,85 @@ class AuthController extends Controller
     public function __construct(private readonly AuthFlow $auth) {}
 
     /**
-     * Staff password login (admin / operator / verifikator). Pendaftar that
-     * have no seeded password keep using the NISN → OTP flow.
+     * Unified login for all roles.
      */
-    public function staffLoginPage(): Response
+    public function login(Request $request): RedirectResponse
     {
-        return Inertia::render('Auth/StaffLogin');
-    }
-
-    public function staffLogin(Request $request): \Illuminate\Http\RedirectResponse
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $validated = $request->validate([
+            'identifier' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'Email atau kata sandi salah.'])->withInput();
+        $identifier = $validated['identifier'];
+        $password = $validated['password'];
+
+        // Case 1: Staff Login (Email)
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            if (Auth::attempt(['email' => $identifier, 'password' => $password], $request->boolean('remember'))) {
+                $request->session()->regenerate();
+                $user = Auth::user();
+
+                // Check for 2FA if user is admin
+                if (in_array($user->role, ['admin_provinsi', 'admin_kabkota']) && $user->google2fa_secret) {
+                    return redirect()->route('auth.two-factor.verify');
+                }
+
+                return (match ($user->role) {
+                    'admin_provinsi', 'admin_kabkota' => redirect()->route('admin.index'),
+                    'operator_sekolah', 'verifikator' => redirect()->route('verification.index'),
+                    default => redirect()->route('dashboard.pendaftar'),
+                })->with('flash', ['success' => 'Selamat datang, '.$user->name]);
+            }
+
+            return back()->withErrors(['identifier' => 'Email atau kata sandi salah.'])->withInput();
         }
 
-        $request->session()->regenerate();
+        // Case 2: Student Login (NISN)
+        if (strlen($identifier) === 10 && ctype_digit($identifier)) {
+            if ($identifier === $password) {
+                try {
+                    $user = User::where('role', 'pendaftar')
+                        ->whereHas('student', fn ($q) => $q->where('nisn', $identifier))
+                        ->first();
 
-        $user = $request->user();
+                    if (! $user) {
+                        return back()->withErrors(['identifier' => 'Akun pendaftar tidak ditemukan.'])->withInput();
+                    }
 
-        return (match ($user->role) {
-            'admin_provinsi', 'admin_kabkota' => redirect()->route('admin.index'),
-            'operator_sekolah', 'verifikator' => redirect()->route('verification.index'),
-            default => redirect()->route('dashboard.pendaftar'),
-        })->with('flash', ['success' => 'Selamat datang, '.$user->name]);
+                    Auth::login($user);
+                    $request->session()->regenerate();
+
+                    return redirect()->route('dashboard.pendaftar')->with('flash', ['success' => 'Selamat datang, '.$user->name]);
+                } catch (\Exception $e) {
+                    return back()->withErrors(['identifier' => 'Terjadi kesalahan saat login.'])->withInput();
+                }
+            }
+
+            return back()->withErrors(['password' => 'Password tidak sesuai dengan NISN.'])->withInput();
+        }
+
+        return back()->withErrors(['identifier' => 'Format login tidak dikenali. Gunakan Email atau NISN.'])->withInput();
     }
 
-    /**
-     * Step 1 — NISN lookup. Renders confirmation screen with masked data,
-     * or back with error when the gateway says not-found.
-     */
+    public function loginPage(): Response
+    {
+        return Inertia::render('Auth/Login');
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('landing');
+    }
+
+    // ---------------------------------------------------------------------
+    // Legacy NISN → OTP flow (backend/README "alur inti" #1). Routes still
+    // registered in routes/web.php; pages Auth/NisnLookup, OtpSend, OtpVerify.
+    // ---------------------------------------------------------------------
+
     public function nisn(Request $request): Response
     {
         return Inertia::render('Auth/NisnLookup');
@@ -62,7 +111,6 @@ class AuthController extends Controller
         try {
             $student = $this->auth->lookup($validated['nisn']);
         } catch (StudentNotFoundException $e) {
-            // Inertia back with flash on the form (no session-bound data)
             return back()->withErrors(['nisn' => $e->getMessage()])->withInput();
         }
 
@@ -70,8 +118,8 @@ class AuthController extends Controller
             'nisn' => $student->nisn,
             'student' => [
                 'nama' => $student->nama,
-                'nik_masked' => \App\Support\Masking::nik($student->nik),
-                'nisn_masked' => \App\Support\Masking::nisn($student->nisn),
+                'nik_masked' => Masking::nik($student->nik),
+                'nisn_masked' => Masking::nisn($student->nisn),
                 'tanggal_lahir' => $student->tanggalLahir?->format('d M Y'),
                 'jenis_kelamin' => $student->jenisKelamin,
                 'sekolah_asal' => $student->sekolahAsal,
@@ -128,13 +176,58 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request): \Illuminate\Http\RedirectResponse
+    public function showTwoFactorPage(): Response
     {
-        Auth::logout();
+        return Inertia::render('Auth/TwoFactorVerify');
+    }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    public function verifyTwoFactor(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
 
-        return redirect()->route('landing');
+        $user = Auth::user();
+        $service = app(TwoFactorAuthService::class);
+
+        if ($service->verifyOtp($user->google2fa_secret, $request->code)) {
+            $request->session()->put('2fa_verified', true);
+
+            return redirect()->route('admin.index')->with('flash', ['success' => 'OTP Terverifikasi. Selamat datang!']);
+        }
+
+        return back()->withErrors(['code' => 'Kode OTP salah atau sudah kedaluwarsa.'])->withInput();
+    }
+
+    public function showTwoFactorSetup(): Response
+    {
+        $user = Auth::user();
+        $service = app(TwoFactorAuthService::class);
+
+        return Inertia::render('Auth/TwoFactorSetup', [
+            'qr_code' => $service->getQrCodeUrl($user),
+        ]);
+    }
+
+    public function enableTwoFactor(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        $user = Auth::user();
+        $service = app(TwoFactorAuthService::class);
+
+        // Secret is generated and temporarily held in session or handled by service
+        // For simplicity, we generate it and then verify it
+        $secret = $service->generateSecret();
+
+        if ($service->verifyOtp($secret, $request->code)) {
+            $user->update(['google2fa_secret' => $secret]);
+
+            return redirect()->route('admin.index')->with('flash', ['success' => '2FA berhasil diaktifkan!']);
+        }
+
+        return back()->withErrors(['code' => 'Kode verifikasi awal salah.'])->withInput();
     }
 }

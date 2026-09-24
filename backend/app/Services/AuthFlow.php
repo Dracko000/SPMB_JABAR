@@ -5,7 +5,10 @@ namespace App\Services;
 use App\Integration\DataIntegrationGateway;
 use App\Integration\Exceptions\StudentNotFoundException;
 use App\Integration\StudentRecord;
+use App\Models\Address;
+use App\Models\EducationRecord;
 use App\Models\OtpCode;
+use App\Models\ParentGuardian;
 use App\Models\Student;
 use App\Models\User;
 use App\Support\Audit;
@@ -21,7 +24,7 @@ class AuthFlow
     public function __construct(private readonly DataIntegrationGateway $gateway) {}
 
     /**
-     * Step 1 — validate NISN, read student via gateway.
+     * Step 1 — validate NISN, read student via gateway, and sync to local DB.
      *
      * @throws StudentNotFoundException
      */
@@ -29,7 +32,49 @@ class AuthFlow
     {
         $record = $this->gateway->lookupByNisn($nisn);
 
-        Audit::log('auth.nisn.lookup', ['nisn' => $nisn, 'found' => true]);
+        // Sync to local DB to ensure "One Data" principle. Note: StudentRecord
+        // carries only what the gateway returns (no status_peserta, nis_asal,
+        // pekerjaan or region in the value object) — those stay on their
+        // defaults / null.
+        $student = Student::updateOrCreate(
+            ['nisn' => $record->nisn],
+            [
+                'nik' => $record->nik,
+                'nama' => $record->nama,
+                'tempat_lahir' => $record->tempatLahir,
+                'tanggal_lahir' => $record->tanggalLahir,
+                'jenis_kelamin' => $record->jenisKelamin,
+                'agama' => $record->agama,
+            ]
+        );
+
+        // Sync related records
+        ParentGuardian::updateOrCreate(
+            ['student_id' => $student->id],
+            [
+                'nama_ayah' => $record->namaAyah,
+                'nama_ibu' => $record->namaIbu,
+            ]
+        );
+
+        Address::updateOrCreate(
+            ['student_id' => $student->id],
+            [
+                'alamat' => $record->alamat,
+                'rt' => $record->rt,
+                'rw' => $record->rw,
+            ]
+        );
+
+        EducationRecord::updateOrCreate(
+            ['student_id' => $student->id],
+            [
+                'sekolah_asal' => $record->sekolahAsal,
+                'tahun_lulus' => $record->tahunLulus,
+            ]
+        );
+
+        Audit::log('auth.nisn.lookup', ['nisn' => $nisn, 'found' => true, 'synced' => true]);
 
         return $record;
     }
@@ -114,7 +159,7 @@ class AuthFlow
             ],
         );
 
-        Audit::log('auth.otp.verified', ['nisn' => $nisn, 'student_id' => $student->id]);
+        Audit::log('auth.otp.verified', ['nisn' => $nisn, 'student_id' => $student->id], $student);
 
         return $user;
     }
