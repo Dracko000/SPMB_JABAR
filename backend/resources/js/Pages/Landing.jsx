@@ -64,7 +64,7 @@ const PATHS = [
     },
 ];
 
-export default function Landing({ year: periodYear, period, stats }) {
+export default function Landing({ period, stats }) {
     const { data, setData, get, processing } = useForm({
         no_pendaftaran: '',
     });
@@ -124,10 +124,6 @@ export default function Landing({ year: periodYear, period, stats }) {
                 <section className="border-b border-outline-variant bg-white">
                     <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16 lg:py-24 lg:px-8">
                         <div>
-                            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-700">
-                                <span className="size-1.5 rounded-full bg-brand-500" aria-hidden="true" />
-                                Sistem berjalan normal · Periode {periodYear}
-                            </p>
                             <h1 className="mt-6 text-4xl font-extrabold leading-[1.06] tracking-tight text-cemara text-balance sm:text-5xl lg:text-6xl">
                                 Penerimaan Murid Baru <span className="text-brand-800">Jawa Barat</span>
                             </h1>
