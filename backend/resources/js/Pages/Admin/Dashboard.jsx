@@ -276,14 +276,14 @@ function Overview({ stats, pathDistribution, quotas, selections, registrations }
         <div className="space-y-6">
             {/* KPI Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="kpi">
+                <div className="kpi border-t-4 border-t-brand-600">
                     <p className="kpi-label">Total Pendaftar</p>
                     <div className="flex items-baseline gap-2">
                         <span className="kpi-value text-cemara">{stats.total_pendaftar}</span>
                         <span className="text-xs font-medium text-ink-faint">Siswa</span>
                     </div>
                 </div>
-                <div className="kpi">
+                <div className="kpi border-t-4 border-t-flag-blue-deep">
                     <p className="kpi-label">Terverifikasi</p>
                     <div className="flex items-baseline gap-2">
                         <span className="kpi-value text-brand-700">{stats.verified_count}</span>
@@ -292,14 +292,14 @@ function Overview({ stats, pathDistribution, quotas, selections, registrations }
                         </span>
                     </div>
                 </div>
-                <div className="kpi">
+                <div className="kpi border-t-4 border-t-warn-600">
                     <p className="kpi-label">Butuh Perbaikan</p>
                     <div className="flex items-baseline gap-2">
                         <span className="kpi-value text-warn-700">{stats.revision_count}</span>
                         <span className="text-xs font-medium text-ink-faint">Siswa</span>
                     </div>
                 </div>
-                <div className="kpi">
+                <div className="kpi border-t-4 border-t-flag-red">
                     <p className="kpi-label">Saturasi Kuota</p>
                     <div className="flex items-baseline gap-2">
                         <span className="kpi-value text-brand-700">

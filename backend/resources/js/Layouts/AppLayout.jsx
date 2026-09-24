@@ -58,7 +58,7 @@ export default function AppLayout({ header, children }) {
             <div className="min-h-screen bg-surface text-ink selection:bg-brand-100 selection:text-brand-900">
                 <header className="sticky top-0 z-50 border-b border-outline-variant bg-white/95 backdrop-blur">
                     {/* Tricolor Bendera Jabar — biru (air) · emas (padi) · hijau (perisai) */}
-                    <div className="flex h-1 w-full" aria-hidden="true">
+                    <div className="flex h-1.5 w-full" aria-hidden="true">
                         <span className="flex-1 bg-flag-blue" />
                         <span className="flex-1 bg-flag-gold" />
                         <span className="flex-1 bg-brand-700" />
@@ -136,6 +136,12 @@ export default function AppLayout({ header, children }) {
                 </main>
 
                 <footer className="mt-20 border-t border-outline-variant bg-white">
+                    {/* Tricolor Bendera Jabar di footer */}
+                    <div className="flex h-1.5 w-full" aria-hidden="true">
+                        <span className="flex-1 bg-flag-blue" />
+                        <span className="flex-1 bg-flag-gold" />
+                        <span className="flex-1 bg-brand-700" />
+                    </div>
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-xs text-ink-faint sm:flex-row sm:px-6 lg:px-8">
                         <div className="text-center sm:text-left">
                             © {new Date().getFullYear()} Dinas Pendidikan Provinsi Jawa Barat — SPMB Terintegrasi

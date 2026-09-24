@@ -1,6 +1,33 @@
 import { useForm, Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 
+/* Ribbon warna status hasil — palet Bendera Jabar */
+const RESULT_STYLES = {
+    accepted: 'bg-brand-700 text-white',
+    selected: 'bg-brand-700 text-white',
+    waiting: 'bg-flag-blue text-white',
+    pending: 'bg-flag-blue text-white',
+    menunggu: 'bg-flag-blue text-white',
+    perbaikan: 'bg-warn-600 text-white',
+    rejected: 'bg-flag-red text-white',
+    ditolak: 'bg-flag-red text-white',
+    not_selected: 'bg-flag-red text-white',
+    not_accepted: 'bg-flag-red text-white',
+};
+
+const RESULT_LABELS = {
+    accepted: 'Selamat! Anda Diterima',
+    selected: 'Selamat! Anda Diterima',
+    waiting: 'Menunggu Hasil Final',
+    pending: 'Menunggu Hasil Final',
+    menunggu: 'Menunggu Hasil Final',
+    perbaikan: 'Dokumen Perlu Perbaikan',
+    rejected: 'Mohon Maaf, Anda Tidak Diterima',
+    ditolak: 'Mohon Maaf, Anda Tidak Diterima',
+    not_selected: 'Mohon Maaf, Anda Tidak Diterima',
+    not_accepted: 'Mohon Maaf, Anda Tidak Diterima',
+};
+
 export default function Announcement({ search, result, error }) {
     const { data, setData, get, processing } = useForm({
         no_pendaftaran: search || '',
@@ -58,12 +85,10 @@ export default function Announcement({ search, result, error }) {
                             <div className="mb-5 text-center">
                                 <span
                                     className={`inline-flex rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider ${
-                                        result.status === 'accepted'
-                                            ? 'bg-brand-700 text-white'
-                                            : 'bg-surface-container text-ink-soft'
+                                        RESULT_STYLES[result.status] ?? 'bg-surface-container text-ink-soft'
                                     }`}
                                 >
-                                    {result.status === 'accepted' ? 'Selamat! Anda Diterima' : 'Mohon Maaf, Anda Tidak Diterima'}
+                                    {RESULT_LABELS[result.status] ?? 'Mohon Maaf, Anda Tidak Diterima'}
                                 </span>
                             </div>
                             <div className="grid grid-cols-1 gap-3">
