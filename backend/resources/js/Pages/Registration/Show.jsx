@@ -263,7 +263,7 @@ export default function Show({ registration, paths, schools, step }) {
 
 function DocUploadForm({ path }) {
     const { errors } = usePage().props;
-    const [type, setType] = useState(path?.requirements?.[0]?.code ?? 'akte');
+    const [type, setType] = useState(path?.requirements?.[0]?.code ?? 'KK');
     const [file, setFile] = useState(null);
 
     const upload = (e) => {

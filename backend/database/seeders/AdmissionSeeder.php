@@ -27,25 +27,28 @@ class AdmissionSeeder extends Seeder
             ['code' => 'perpindahan', 'name' => 'Jalur Perpindahan Tugas'],
         ];
 
+        // Kontrak dokumen wajib per jalur (selaras dgn validasi runtime di
+        // RegistrationFlow::validateMandatoryDocuments & VerificationEngine:
+        // 1.zonasi=KK,Ijazah  2.prestasi=KK,KIP,SKTM  3.afirmasi=KK,Sertifikat_Prestasi
+        // 4.perpindahan=KK,Surat_Mutasi). Wizard UI memakai kode ini sebagai
+        // jenis dokumen yang diunggah, jadi harus cocok dengan validasi submit.
         $requirementsByPath = [
             'zonasi' => [
-                ['code' => 'akte', 'name' => 'Akta Kelahiran'],
-                ['code' => 'kk', 'name' => 'Kartu Keluarga'],
-                ['code' => 'rapor', 'name' => 'Rapor Semester 1-5'],
+                ['code' => 'KK', 'name' => 'Kartu Keluarga'],
+                ['code' => 'Ijazah', 'name' => 'Ijazah'],
             ],
             'prestasi' => [
-                ['code' => 'akte', 'name' => 'Akta Kelahiran'],
-                ['code' => 'rapor', 'name' => 'Rapor Semester 1-5'],
-                ['code' => 'sertifikat', 'name' => 'Sertifikat Prestasi'],
+                ['code' => 'KK', 'name' => 'Kartu Keluarga'],
+                ['code' => 'KIP', 'name' => 'Kartu KIP/PKH'],
+                ['code' => 'SKTM', 'name' => 'Surat Keterangan Tidak Mampu'],
             ],
             'afirmasi' => [
-                ['code' => 'akte', 'name' => 'Akta Kelahiran'],
-                ['code' => 'kk', 'name' => 'Kartu Keluarga'],
-                ['code' => 'kip', 'name' => 'Kartu KIP/PKH'],
+                ['code' => 'KK', 'name' => 'Kartu Keluarga'],
+                ['code' => 'Sertifikat_Prestasi', 'name' => 'Sertifikat Prestasi'],
             ],
             'perpindahan' => [
-                ['code' => 'akte', 'name' => 'Akta Kelahiran'],
-                ['code' => 'skpindah', 'name' => 'SK Pindah Tugas'],
+                ['code' => 'KK', 'name' => 'Kartu Keluarga'],
+                ['code' => 'Surat_Mutasi', 'name' => 'Surat Pindah Tugas'],
             ],
         ];
 
