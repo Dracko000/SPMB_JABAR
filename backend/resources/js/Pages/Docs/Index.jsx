@@ -21,12 +21,6 @@ const ROLE_LABELS = {
     admin_provinsi: 'Admin Provinsi',
 };
 
-/** Keterangan kata sandi akun demo, dikelompokkan per peran. */
-const PASSWORD_NOTE = {
-    pendaftar: { label: 'NISN (mis. 0113456789)', hint: 'Untuk akun demo, kata sandi = NISN yang sama.' },
-    admin_provinsi: { label: 'password', hint: 'Sama untuk semua akun staf tersedia.' },
-};
-
 const PERAN = [
     {
         role: 'pendaftar',
