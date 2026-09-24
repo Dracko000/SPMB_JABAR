@@ -116,7 +116,7 @@ function PeriodTab({ period }) {
                                         registration_end: formValues[p.id]?.registration_end || p.registration_end?.split('T')[0],
                                     }, { preserveScroll: true });
                                 }}
-                                className="space-y-4 rounded-8 border border-outline-variant bg-surface-container-low p-4"
+                                className="space-y-4"
                             >
                                 <div className="flex justify-between items-center border-b border-outline-variant pb-2 mb-2">
                                     <span className="font-bold text-ink text-sm">{p.name}</span>
@@ -348,9 +348,9 @@ function Overview({ stats, pathDistribution, quotas, selections, registrations }
                 </Panel>
 
                 <Panel title="Seleksi Terbaru" className="lg:col-span-1">
-                    <div className="space-y-2">
+                    <div className="divide-y divide-outline-variant">
                         {selections.slice(0, 8).map((s) => (
-                            <div key={s.id} className="flex items-center justify-between rounded-8 bg-surface-container-low px-3 py-2 text-sm">
+                            <div key={s.id} className="flex items-center justify-between py-2.5 text-sm">
                                 <span className="font-medium text-ink">{s.registration?.student?.nama}</span>
                                 <span className="text-ink-faint">{s.school?.name}</span>
                                 <Badge status={s.status} />
@@ -674,9 +674,9 @@ function RegistrationsTab({ registrations }) {
 function ComplaintsTab({ complaints }) {
     return (
         <Panel title={`Pengaduan (${complaints.length})`}>
-            <div className="md:hidden space-y-3">
+            <div className="md:hidden divide-y divide-outline-variant">
                 {complaints.map((c) => (
-                    <div key={c.id} className="rounded-8 border border-outline-variant p-3">
+                    <div key={c.id} className="py-3">
                         <div className="flex items-center gap-2"><span className="font-mono text-xs">{c.ticket_no}</span><Badge status={c.status} /></div>
                         <p className="mt-1 font-semibold text-ink">{c.subject}</p>
                     </div>

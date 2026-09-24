@@ -48,7 +48,7 @@ export default function Index({ complaints, categories }) {
                         <h3 className="text-lg font-bold tracking-tight text-ink">{c.subject}</h3>
                         <p className="mt-2 text-sm leading-relaxed text-ink-soft">{c.message}</p>
                         {c.admin_response && (
-                            <div className="mt-5 rounded-8 border border-outline-variant bg-surface-container-low px-4 py-3.5">
+                            <div className="mt-5 border-l-2 border-brand-300 pl-4">
                                 <p className="text-sm leading-relaxed text-ink-soft">
                                     <span className="font-bold text-ink">Tanggapan admin: </span>
                                     {c.admin_response}

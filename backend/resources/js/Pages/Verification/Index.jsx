@@ -59,12 +59,12 @@ export default function Index({ registrations }) {
                                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                                     <div>
                                         <h3 className="micro mb-4">Dokumen Persyaratan</h3>
-                                        <div className="space-y-3">
+                                        <div className="divide-y divide-outline-variant">
                                             {r.documents?.length === 0 && (
                                                 <p className="text-sm italic text-ink-faint">Belum ada dokumen terunggah.</p>
                                             )}
                                             {r.documents.map((d) => (
-                                                <div key={d.id} className="card flex items-center justify-between px-4 py-3 text-sm">
+                                                <div key={d.id} className="flex items-center justify-between py-3 text-sm">
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex size-7 items-center justify-center rounded-8 bg-surface-container text-ink-soft">
                                                             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -118,7 +118,7 @@ function ReviewForm({ registration }) {
     };
 
     return (
-        <div className="card p-6">
+        <div className="space-y-6">
             <div className="mb-6 space-y-3">
                 <h4 className="micro">Checklist Verifikasi</h4>
                 <div className="grid grid-cols-1 gap-2.5">
@@ -127,7 +127,7 @@ function ReviewForm({ registration }) {
                         { id: 'is_ijazah_verified', label: 'Ijazah/SKL Valid' },
                         { id: 'is_alamat_verified', label: 'Alamat Domisili Valid' },
                     ].map((item) => (
-                        <label key={item.id} className="flex cursor-pointer items-center gap-3 rounded-8 border border-outline-variant bg-surface-container-low px-3.5 py-3 transition-colors hover:bg-surface-container">
+                        <label key={item.id} className="flex cursor-pointer items-center gap-3 rounded-8 border border-outline-variant bg-white px-3.5 py-3 transition-colors hover:bg-surface-container">
                             <input
                                 type="checkbox"
                                 checked={checklist[item.id]}

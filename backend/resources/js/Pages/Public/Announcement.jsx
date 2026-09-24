@@ -91,21 +91,21 @@ export default function Announcement({ search, result, error }) {
                                     {RESULT_LABELS[result.status] ?? 'Mohon Maaf, Anda Tidak Diterima'}
                                 </span>
                             </div>
-                            <div className="grid grid-cols-1 gap-3">
-                                <div className="flex justify-between rounded-8 bg-surface-container-low px-4 py-3">
+                            <div className="divide-y divide-outline-variant">
+                                <div className="flex justify-between py-3.5">
                                     <span className="text-sm text-ink-soft">Nama Siswa</span>
                                     <span className="text-sm font-bold text-ink">{result.name}</span>
                                 </div>
-                                <div className="flex justify-between rounded-8 bg-surface-container-low px-4 py-3">
+                                <div className="flex justify-between py-3.5">
                                     <span className="text-sm text-ink-soft">Sekolah Tujuan</span>
                                     <span className="text-sm font-bold text-ink">{result.school}</span>
                                 </div>
-                                <div className="flex justify-between rounded-8 bg-surface-container-low px-4 py-3">
+                                <div className="flex justify-between py-3.5">
                                     <span className="text-sm text-ink-soft">Jalur Pendaftaran</span>
                                     <span className="text-sm font-bold text-ink">{result.path}</span>
                                 </div>
                                 {result.rank && (
-                                    <div className="flex justify-between rounded-8 bg-surface-container-low px-4 py-3">
+                                    <div className="flex justify-between py-3.5">
                                         <span className="text-sm text-ink-soft">Ranking</span>
                                         <span className="text-sm font-bold text-ink">#{result.rank}</span>
                                     </div>
