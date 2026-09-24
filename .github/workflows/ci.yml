@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: spmb_jabar_test
+          POSTGRES_USER: spmb
+          POSTGRES_PASSWORD: spmb_dev_pass
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U spmb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5433
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_pgsql, mbstring, xml, gd
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Pint (format check)
+        run: vendor/bin/pint --test
+
+      - name: PHPStan (static analysis)
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      - name: Pest (feature tests, PostgreSQL)
+        run: vendor/bin/pest

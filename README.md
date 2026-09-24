@@ -15,7 +15,7 @@ PHP ≥ 8.2 (pdo_pgsql), Composer 2, Node ≥ 20, PostgreSQL 16 (port 5433).
 
 ## Yang belum selesai
 
-Diperbarui 2026-09-17. Bukan daftar harapan — semuanya sengaja ditunda, dengan
+Diperbarui 2026-09-24. Bukan daftar harapan — semuanya sengaja ditunda, dengan
 alasannya.
 
 ### Verifikasi
@@ -23,8 +23,9 @@ alasannya.
 | Item | Status |
 |---|---|
 | 7 dari 9 halaman AppLayout dirender di browser | selesai — headless Edge + sesi login asli |
+| Rombak UI (18+ halaman, desain hijau Jabar) | selesai — build hijau; verifikasi visual browser masih perlu |
 | Dashboard Pendaftar + wizard `/pendaftaran` di browser | belum — butuh akun role `pendaftar`; belum ada seed, akun dibuat lewat alur NISN → OTP |
-| `php artisan test` | 61 lulus / 198 assertion |
+| `php artisan test` | 68 lulus / 230 assertion — CI GitHub Actions (PostgreSQL 16), PHPStan level 6 + baseline, Pint |
 
 ### Menjalankan
 
@@ -53,8 +54,9 @@ alasannya.
 
 ### Operasional
 
-- Belum ada Dockerfile, `docker-compose`, atau CI. Docker Compose sengaja
-  ditunda sampai runtime ditentukan.
+- CI GitHub Actions sudah ada (`.github/workflows/ci.yml`): Pest + PostgreSQL 16,
+  `npm run build`, Pint, dan PHPStan level 6 (dengan baseline). Dockerfile /
+  `docker-compose` masih sengaja ditunda sampai runtime produksi ditentukan.
 - Temuan review tingkat MINOR pada `SelectionEngine` belum ditindak.
 
 ### Fase berikutnya
