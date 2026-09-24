@@ -1,10 +1,13 @@
-export default function StatCard({ label, value, accent = false }) {
+export default function StatCard({ label, value, accent = false, hint }) {
     return (
-        <div className={`rounded-8 border px-4 py-4 ${accent ? 'border-brand-700 bg-brand-700 text-white' : 'border-outline-variant bg-white'}`}>
-            <p className={`text-xs font-semibold ${accent ? 'text-brand-200' : 'text-ink-soft'}`}>
+        <div className={accent ? 'kpi-accent' : 'kpi'}>
+            <p className={accent ? 'text-xs font-bold uppercase tracking-wider text-brand-100' : 'kpi-label'}>
                 {label}
             </p>
-            <p className={`mt-1 text-2xl font-extrabold ${accent ? 'text-white' : 'text-ink'}`}>{value}</p>
+            <p className={`kpi-value ${accent ? 'text-white' : 'text-ink'}`}>{value}</p>
+            {hint && (
+                <p className={accent ? 'mt-1 text-xs text-brand-100' : 'mt-1 text-xs text-ink-faint'}>{hint}</p>
+            )}
         </div>
     );
 }

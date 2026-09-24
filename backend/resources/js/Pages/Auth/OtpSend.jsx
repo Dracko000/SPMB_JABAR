@@ -13,7 +13,7 @@ export default function OtpSend({ nisn, student }) {
                         <p className="mt-1 text-sm text-ink-faint">Pastikan data di bawah benar</p>
                     </div>
 
-                    <div className="rounded-8 border border-outline-variant bg-white p-6 shadow-sm">
+                    <div className="card p-6">
                         <dl className="space-y-3 text-sm">
                             <Row label="Nama" value={student.nama} strong />
                             <Row label="NISN" value={student.nisn_masked} />

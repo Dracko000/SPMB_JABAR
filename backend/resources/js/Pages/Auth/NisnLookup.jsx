@@ -22,7 +22,7 @@ export default function NisnLookup() {
                     </div>
 
                     <form onSubmit={(e) => { e.preventDefault(); post('/auth/nisn'); }}
-                          className="rounded-8 border border-outline-variant bg-white p-6 shadow-sm">
+                          className="card p-6">
                         <label className="block text-sm font-semibold text-ink">NISN</label>
                         <p className="mt-1 text-xs text-ink-faint">
                             Nomor Induk Siswa Nasional Anda (10 digit)

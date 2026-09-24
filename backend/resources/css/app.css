@@ -7,42 +7,141 @@
 @source '../**/*.jsx';
 @source '../**/*.js';
 
-/* SPMB JABAR design system — blue civic tokens (brand-700 = #0000ff) */
+/* ============================================================
+   SPMB JABAR — design system
+   Civic-trust palette: institutional Jabar green on warm paper.
+   Intentionally restrained — no gradients, no decorative blobs,
+   no colored shadows, no bounce motion.
+   ============================================================ */
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Brand */
-    --color-brand-50:  #eff4ff;
-    --color-brand-100: #dce8ff;
-    --color-brand-200: #c2d4ff;
-    --color-brand-300: #9cb8ff;
-    --color-brand-400: #6690ff;
-    --color-brand-500: #3360ff;
-    --color-brand-600: #0a33ff;
-    --color-brand-700: #0000ff;
-    --color-brand-800: #0022cc;
-    --color-brand-900: #001a99;
-    --color-brand-950: #001166;
+    /* Brand — Jabar green (primary #0E5A3A, ~8:1 on white) */
+    --color-brand-50:  #ecf4ef;
+    --color-brand-100: #d6e9dd;
+    --color-brand-200: #add3bf;
+    --color-brand-300: #7fb89c;
+    --color-brand-400: #4f9977;
+    --color-brand-500: #2c7d5a;
+    --color-brand-600: #1d6b4b;
+    --color-brand-700: #0e5a3a;
+    --color-brand-800: #0b4630;
+    --color-brand-900: #083727;
+    --color-brand-950: #041f17;
 
-    /* Neuters / surface */
-    --color-surface: #f8f9ff;
-    --color-surface-container: #e5eeff;
-    --color-surface-container-low: #eff4ff;
-    --color-surface-container-high: #dce9ff;
-    --color-surface-container-highest: #d3e4fe;
-    --color-surface-variant: #d3e4fe;
-    --color-outline: #7a887e;
-    --color-outline-variant: #bfc9c0;
+    /* Neuters / surface — warm paper */
+    --color-surface: #f7f7f3;
+    --color-surface-container: #eeefe9;
+    --color-surface-container-low: #f3f4ef;
+    --color-surface-container-high: #e3e5dd;
+    --color-surface-container-highest: #d7dad0;
+    --color-surface-variant: #e3e5dd;
+    --color-outline: #cfd2c8;
+    --color-outline-variant: #e0e2da;
 
-    --color-ink: #0b1c30;
-    --color-ink-soft: #425769;
-    --color-ink-faint: #6b7d8f;
+    /* Ink — near-black with a green cast */
+    --color-ink: #15231a;
+    --color-ink-soft: #46554a;
+    --color-ink-faint: #6c7b6f;
 
-    --color-cemara: #001a99;    /* primary dark — headline/CTA on light */
-    --color-teal: #0a33ff;      /* accent */
-    --color-error: #ba1a1a;
-    --color-error-container: #ffdad6;
+    /* Headline / CTA color on light surfaces */
+    --color-cemara: #083727;
+    --color-teal: #1d6b4b;
+
+    /* Semantic */
+    --color-error: #b3261e;
+    --color-error-container: #f9dedc;
+    --color-warn-50: #fbf4e3;
+    --color-warn-100: #f6e7c3;
+    --color-warn-200: #ecd28d;
+    --color-warn-300: #dfba5d;
+    --color-warn-400: #c99f3a;
+    --color-warn-500: #b8862b;
+    --color-warn-600: #9c6f1f;
+    --color-warn-700: #7d5817;
+    --color-warn-800: #5f4110;
+    --color-warn-900: #452f09;
 
     --radius-8: 8px; /* design-system roundness */
+}
+
+@layer base {
+    html {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    body {
+        background-color: var(--color-surface);
+        color: var(--color-ink);
+        font-feature-settings: 'cv11', 'ss01';
+    }
+
+    ::selection {
+        background-color: var(--color-brand-100);
+        color: var(--color-brand-900);
+    }
+
+    /* Visible, consistent focus ring across every interactive element */
+    :focus-visible {
+        outline: 2px solid var(--color-brand-700);
+        outline-offset: 2px;
+    }
+}
+
+@layer components {
+    /* ---- Buttons ---- */
+    .btn-primary {
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-8 bg-brand-700 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .btn-outline {
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-8 border border-outline bg-white px-5 py-2.5 text-sm font-bold text-ink transition-colors hover:border-brand-700 hover:text-brand-800 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .btn-ghost {
+        @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-8 px-3 py-1.5 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-800 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    /* ---- Form fields ---- */
+    .label {
+        @apply block text-xs font-bold uppercase tracking-wider text-ink-soft;
+    }
+    .field-hint {
+        @apply mt-1 text-xs text-ink-faint;
+    }
+    .input {
+        @apply mt-1.5 w-full rounded-8 border border-outline bg-white px-3 py-2.5 text-sm text-ink transition-colors placeholder:text-ink-faint focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-100;
+    }
+
+    /* ---- Surfaces ---- */
+    .card {
+        @apply rounded-8 border border-outline-variant bg-white;
+    }
+
+    /* ---- KPI cards ---- */
+    .kpi {
+        @apply rounded-8 border border-outline-variant bg-white px-5 py-5;
+    }
+    .kpi-accent {
+        @apply rounded-8 border border-brand-700 bg-brand-700 px-5 py-5 text-white;
+    }
+    .kpi-label {
+        @apply text-xs font-bold uppercase tracking-wider text-ink-faint;
+    }
+    .kpi-value {
+        @apply mt-2 text-3xl font-extrabold tracking-tight tabular-nums;
+    }
+
+    /* Small uppercase micro-label — use sparingly */
+    .micro {
+        @apply text-[11px] font-bold uppercase tracking-widest text-ink-faint;
+    }
+}
+
+/* Hide scrollbars for horizontal tab strips (used app-wide) */
+.no-scrollbar {
+    scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
 }

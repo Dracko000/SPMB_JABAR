@@ -14,7 +14,7 @@ export default function OtpVerify({ nisn, request_token, otp_hint }) {
                     </div>
 
                     <form onSubmit={(e) => { e.preventDefault(); post('/auth/otp/verify'); }}
-                          className="rounded-8 border border-outline-variant bg-white p-6 shadow-sm">
+                          className="card p-6">
                         <input
                             type="text"
                             inputMode="numeric"
