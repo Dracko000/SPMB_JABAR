@@ -24,6 +24,14 @@ class School extends Model
         return $this->belongsTo(Region::class);
     }
 
+    /**
+     * Staff accounts assigned to this school (operator_sekolah/operator_smp).
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'school_id');
+    }
+
     public function quotas(): HasMany
     {
         return $this->hasMany(Quota::class);

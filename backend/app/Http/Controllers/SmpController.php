@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Address;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\User;
@@ -32,6 +33,7 @@ class SmpController extends Controller
     {
         $request->validate([
             'nisn' => ['required', 'string', 'digits:10', 'unique:students,nisn'],
+            'nik' => ['required', 'string', 'digits:16', 'unique:students,nik'],
             'nama' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'jenis_kelamin' => ['required', 'string', 'in:L,P'],
@@ -44,18 +46,23 @@ class SmpController extends Controller
             $q->where('id', $request->user()->id);
         })->firstOrFail();
 
-        // 1. Create Student record
+        // 1. Create Student record (alamat disimpan terpisah di tabel addresses)
         $student = Student::create([
             'nisn' => $request->nisn,
+            'nik' => $request->nik,
             'nama' => $request->nama,
             'jenis_kelamin' => $request->jenis_kelamin,
             'tanggal_lahir' => $request->tanggal_lahir,
-            'alamat' => $request->alamat,
             'school_id' => $school->id,
         ]);
 
+        Address::create([
+            'student_id' => $student->id,
+            'alamat' => $request->alamat,
+        ]);
+
         // 2. Create User account for the student to login
-        User::create([
+        $user = User::create([
             'name' => $student->nama,
             'email' => $request->email,
             'password' => Hash::make($request->nisn), // Default password is NISN
@@ -63,8 +70,8 @@ class SmpController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        // 3. Link User to Student (if needed, assuming Student model has user_id or User has student_id)
-        // In our current schema, we likely identify students by NISN.
+        // 3. Link User to Student so the pendaftar can log in with NISN
+        $user->update(['student_id' => $student->id]);
 
         return back()->with('flash', ['success' => 'Siswa lulusan berhasil didaftarkan.']);
     }
@@ -79,11 +86,9 @@ class SmpController extends Controller
             abort(403, 'Anda tidak memiliki akses ke data siswa ini.');
         }
 
-        // Also delete associated user account if exists
-        $user = User::where('email', 'like', "%{$student->nisn}%")->first(); // Simplified lookup
-        if ($user) {
-            $user->delete();
-        }
+        // Also delete associated user account if exists (FK users.student_id = nullOnDelete,
+        // jadi user dihapus eksplisit agar akun pendaftar tidak menjadi yatim)
+        User::where('student_id', $student->id)->delete();
 
         $student->delete();
 

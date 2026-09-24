@@ -7,6 +7,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentViewController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SmpController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,8 +16,8 @@ Route::get('/', [PublicController::class, 'info'])->name('landing');
 
 // Public information
 Route::get('info', [PublicController::class, 'info'])->name('public.info');
-Route::get('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1')->name('public.announcement');
-Route::post('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1')->name('public.announcement.post');
+Route::get('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1,announcement')->name('public.announcement');
+Route::post('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1,announcement')->name('public.announcement.post');
 Route::get('public/directory', [PublicController::class, 'directory'])->name('public.directory');
 Route::get('public/downloads', [PublicController::class, 'downloads'])->name('public.downloads');
 
@@ -23,14 +25,14 @@ Route::get('public/downloads', [PublicController::class, 'downloads'])->name('pu
 Route::middleware('guest')->group(function () {
     // Unified login for all roles (Staff & Students)
     Route::get('login', [AuthController::class, 'loginPage'])->name('login');
-    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:3,1');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:3,1,login');
 });
 
 // Legacy OTP flow (keep if still needed for some, otherwise can be removed)
 Route::get('auth/nisn', [AuthController::class, 'nisn'])->name('auth.nisn');
-Route::post('auth/nisn', [AuthController::class, 'lookup'])->middleware('throttle:10,1')->name('auth.lookup');
-Route::post('auth/otp/send', [AuthController::class, 'sendOtp'])->middleware('throttle:3,1')->name('auth.otp.send');
-Route::post('auth/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:3,1')->name('auth.otp.verify');
+Route::post('auth/nisn', [AuthController::class, 'lookup'])->middleware('throttle:10,1,lookup')->name('auth.lookup');
+Route::post('auth/otp/send', [AuthController::class, 'sendOtp'])->middleware('throttle:3,1,otp-send')->name('auth.otp.send');
+Route::post('auth/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:3,1,otp-verify')->name('auth.otp.verify');
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');

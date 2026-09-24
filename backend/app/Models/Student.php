@@ -9,7 +9,7 @@ class Student extends Model
 {
     protected $fillable = [
         'nisn', 'nik', 'nama', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama',
-        'nilai_prestasi', 'jarak_domisili_km', 'status_peserta', 'source',
+        'nilai_prestasi', 'jarak_domisili_km', 'status_peserta', 'source', 'school_id',
     ];
 
     protected function casts(): array

@@ -243,7 +243,7 @@ class AdminController extends Controller
         }
 
         foreach ($validated['distribution'] as $item) {
-            \DB::table('global_quota_distribution')->updateOrCreate(
+            \DB::table('global_quota_distribution')->updateOrInsert(
                 ['admission_period_id' => $period->id, 'admission_path_id' => $item['path_id']],
                 ['percentage' => (float) $item['percentage']]
             );

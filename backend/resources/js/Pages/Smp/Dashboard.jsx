@@ -5,6 +5,7 @@ import { useState } from 'react';
 export default function SmpDashboard({ school, students }) {
     const { data, setData, post, processing, reset } = useForm({
         nisn: '',
+        nik: '',
         nama: '',
         email: '',
         jenis_kelamin: '',
@@ -61,6 +62,17 @@ export default function SmpDashboard({ school, students }) {
                                 type="text"
                                 value={data.nisn}
                                 onChange={(e) => setData('nisn', e.target.value)}
+                                className="input"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="smp-nik" className="label">NIK (16 Digit)</label>
+                            <input
+                                id="smp-nik"
+                                type="text"
+                                value={data.nik}
+                                onChange={(e) => setData('nik', e.target.value)}
                                 className="input"
                                 required
                             />
