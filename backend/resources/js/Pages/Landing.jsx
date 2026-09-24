@@ -24,7 +24,7 @@ const PATHS = [
         code: 'afirmasi',
         name: 'Afirmasi',
         desc: 'Peserta dari keluarga prasejahtera dan berkebutuhan khusus.',
-        chip: 'bg-flag-blue/10 text-flag-blue-deep',
+        chip: 'bg-brand-50 text-brand-700',
         icon: (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
         ),
@@ -33,7 +33,7 @@ const PATHS = [
         code: 'prestasi',
         name: 'Prestasi',
         desc: 'Rapor, lomba, dan capaian akademik lainnya.',
-        chip: 'bg-warn-50 text-warn-700',
+        chip: 'bg-brand-50 text-brand-700',
         icon: (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
         ),
@@ -42,7 +42,7 @@ const PATHS = [
         code: 'mutasi',
         name: 'Mutasi',
         desc: 'Anak pindah tugas orang tua/wali atau perpindahan domisili.',
-        chip: 'bg-flag-red/10 text-flag-red-deep',
+        chip: 'bg-brand-50 text-brand-700',
         icon: (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
         ),
@@ -67,12 +67,6 @@ export default function Landing({ name, year: periodYear, period, stats }) {
             <div className="flex min-h-screen flex-col bg-surface text-ink">
                 {/* Top nav */}
                 <header className="sticky top-0 z-50 border-b border-outline-variant bg-white/95 backdrop-blur">
-                        {/* Tricolor Bendera Jabar — biru (air) · emas (padi) · hijau (perisai) */}
-                        <div className="flex h-1.5 w-full" aria-hidden="true">
-                            <span className="flex-1 bg-flag-blue" />
-                            <span className="flex-1 bg-flag-gold" />
-                            <span className="flex-1 bg-brand-700" />
-                        </div>
                     <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <Link href="/" className="flex items-center gap-3">
                             <img
@@ -114,7 +108,7 @@ export default function Landing({ name, year: periodYear, period, stats }) {
                 {/* Hero */}
                 <section className="border-b border-outline-variant">
                     <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8">
-                        <p className="micro text-flag-blue-deep">Satu NISN · Satu Data · Satu Layanan</p>
+                        <p className="micro text-brand-700">Satu NISN · Satu Data · Satu Layanan</p>
                         <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-cemara sm:text-5xl lg:text-6xl">
                             Penerimaan Murid Baru
                             <br className="hidden sm:block" />
@@ -238,12 +232,6 @@ export default function Landing({ name, year: periodYear, period, stats }) {
 
                 {/* Footer */}
                 <footer className="mt-auto border-t border-outline-variant bg-white">
-                    {/* Tricolor Bendera Jabar di footer */}
-                    <div className="flex h-1.5 w-full" aria-hidden="true">
-                        <span className="flex-1 bg-flag-blue" />
-                        <span className="flex-1 bg-flag-gold" />
-                        <span className="flex-1 bg-brand-700" />
-                    </div>
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-12 text-xs text-ink-faint sm:flex-row sm:px-6 lg:px-8">
                         <div className="text-center sm:text-left">
                             © {year} Dinas Pendidikan Provinsi Jawa Barat — SPMB Terintegrasi
