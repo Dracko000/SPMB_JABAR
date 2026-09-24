@@ -29,7 +29,7 @@ export default function OtpVerify({ nisn, request_token, otp_hint }) {
                             <p className="mt-2 text-sm text-error">{errors.code}</p>
                         )}
 
-                        <div className="mt-4 rounded-8 bg-amber-50 border border-amber-200 px-4 py-2.5 text-xs text-amber-800">
+                        <div className="mt-4 rounded-8 bg-warn-50 border border-warn-200 px-4 py-2.5 text-xs text-warn-800">
                             {otp_hint} Cek log aplikasi untuk kode pada mode pengembangan.
                         </div>
 

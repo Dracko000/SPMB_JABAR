@@ -63,6 +63,12 @@ export default function Landing({ name, year: periodYear, period, stats }) {
             <div className="flex min-h-screen flex-col bg-surface text-ink">
                 {/* Top nav */}
                 <header className="sticky top-0 z-50 border-b border-outline-variant bg-white/95 backdrop-blur">
+                        {/* Tricolor Bendera Jabar — biru (air) · emas (padi) · hijau (perisai) */}
+                        <div className="flex h-1 w-full" aria-hidden="true">
+                            <span className="flex-1 bg-flag-blue" />
+                            <span className="flex-1 bg-flag-gold" />
+                            <span className="flex-1 bg-brand-700" />
+                        </div>
                     <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <Link href="/" className="flex items-center gap-3">
                             <img
@@ -104,7 +110,7 @@ export default function Landing({ name, year: periodYear, period, stats }) {
                 {/* Hero */}
                 <section className="border-b border-outline-variant">
                     <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8">
-                        <p className="micro text-brand-700">Satu NISN · Satu Data · Satu Layanan</p>
+                        <p className="micro text-flag-blue-deep">Satu NISN · Satu Data · Satu Layanan</p>
                         <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-cemara sm:text-5xl lg:text-6xl">
                             Penerimaan Murid Baru
                             <br className="hidden sm:block" />

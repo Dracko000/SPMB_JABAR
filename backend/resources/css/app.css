@@ -9,26 +9,35 @@
 
 /* ============================================================
    SPMB JABAR — design system
-   Civic-trust palette: institutional Jabar green on warm paper.
-   Intentionally restrained — no gradients, no decorative blobs,
-   no colored shadows, no bounce motion.
+   Civic-trust palette: Bendera Jawa Barat — hijau perisai
+   (#167232) dominan, aksen merah (hulu kujang), biru (gelombang
+   air), emas (padi). Intentionally restrained — no gradients,
+   no decorative blobs, no colored shadows, no bounce motion.
    ============================================================ */
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Brand — Jabar green (primary #0E5A3A, ~8:1 on white) */
-    --color-brand-50:  #ecf4ef;
-    --color-brand-100: #d6e9dd;
-    --color-brand-200: #add3bf;
-    --color-brand-300: #7fb89c;
-    --color-brand-400: #4f9977;
-    --color-brand-500: #2c7d5a;
-    --color-brand-600: #1d6b4b;
-    --color-brand-700: #0e5a3a;
-    --color-brand-800: #0b4630;
-    --color-brand-900: #083727;
-    --color-brand-950: #041f17;
+    /* Brand — hijau perisai Bendera Jabar (primary #167232, dominan) */
+    --color-brand-50:  #ecf3ef;
+    --color-brand-100: #d9e9df;
+    --color-brand-200: #b5d7c1;
+    --color-brand-300: #8cbf9e;
+    --color-brand-400: #5fa67b;
+    --color-brand-500: #3d8f5d;
+    --color-brand-600: #267f47;
+    --color-brand-700: #167232;
+    --color-brand-800: #0f5a28;
+    --color-brand-900: #0a411e;
+    --color-brand-950: #053016;
+
+    /* Flag accents — Bendera Jabar, dipakai hemat */
+    --color-flag-blue: #00b5ee;        /* gelombang air */
+    --color-flag-blue-deep: #087ea8;   /* teks di atas permukaan terang */
+    --color-flag-gold: #fff700;        /* emas padi */
+    --color-flag-gold-deep: #8a6a00;   /* teks di atas permukaan terang */
+    --color-flag-red: #ed1c24;         /* hulu kujang */
+    --color-flag-red-deep: #c4141b;    /* teks di atas permukaan terang */
 
     /* Neuters / surface — warm paper */
     --color-surface: #f7f7f3;
@@ -46,8 +55,8 @@
     --color-ink-faint: #6c7b6f;
 
     /* Headline / CTA color on light surfaces */
-    --color-cemara: #083727;
-    --color-teal: #1d6b4b;
+    --color-cemara: #0a411e;
+    --color-teal: #267f47;
 
     /* Semantic */
     --color-error: #b3261e;

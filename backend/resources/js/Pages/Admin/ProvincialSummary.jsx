@@ -100,7 +100,7 @@ export default function ProvincialSummary({ data, generated_at }) {
                                         <td className="px-6 py-4 text-center font-mono">{reg.pendaftar.toLocaleString('id-ID')}</td>
                                         <td className="px-6 py-4 text-center font-mono">{reg.quota.toLocaleString('id-ID')}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className={`font-bold ${reg.saturation > 100 ? 'text-red-600' : 'text-brand-700'}`}>
+                                            <span className={`font-bold ${reg.saturation > 100 ? 'text-flag-red' : 'text-brand-700'}`}>
                                                 {reg.saturation}%
                                             </span>
                                         </td>

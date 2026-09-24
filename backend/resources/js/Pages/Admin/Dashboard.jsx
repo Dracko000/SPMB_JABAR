@@ -177,7 +177,7 @@ function PeriodTab({ period }) {
                         </div>
                         <div className="flex justify-between items-center pt-4 border-t border-outline-variant">
                             <div className="text-sm">
-                                Total: <span className={`font-bold ${distForm.reduce((sum, i) => sum + i.percentage, 0) === 100 ? 'text-green-600' : 'text-red-600'}`}>
+                                Total: <span className={`font-bold ${distForm.reduce((sum, i) => sum + i.percentage, 0) === 100 ? 'text-brand-600' : 'text-flag-red'}`}>
                                     {distForm.reduce((sum, i) => sum + i.percentage, 0)}%
                                 </span>
                             </div>
@@ -246,7 +246,7 @@ function QuotaRequestsTab({ quotaRequests }) {
                                     <td className="py-3 text-right flex justify-end gap-2 whitespace-nowrap">
                                         <button
                                             onClick={() => process(req.id, 'rejected')}
-                                            className="rounded-8 bg-red-50 text-red-600 px-3 py-1.5 text-xs font-bold hover:bg-red-100 transition-colors"
+                                            className="rounded-8 bg-flag-red/10 text-flag-red-deep px-3 py-1.5 text-xs font-bold hover:bg-flag-red/20 transition-colors"
                                         >
                                             Tolak
                                         </button>
@@ -478,7 +478,7 @@ function QuotaTab({ quotas }) {
                         </div>
                         <div className="flex justify-between items-center pt-4 border-t border-outline-variant">
                             <div className="text-sm">
-                                Total: <span className={`font-bold ${distForm.reduce((sum, i) => sum + i.percentage, 0) === 100 ? 'text-green-600' : 'text-red-600'}`}>
+                                Total: <span className={`font-bold ${distForm.reduce((sum, i) => sum + i.percentage, 0) === 100 ? 'text-brand-600' : 'text-flag-red'}`}>
                                     {distForm.reduce((sum, i) => sum + i.percentage, 0)}%
                                 </span>
                             </div>

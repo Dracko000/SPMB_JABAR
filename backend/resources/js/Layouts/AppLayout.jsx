@@ -57,6 +57,12 @@ export default function AppLayout({ header, children }) {
             <Head titleTemplate="%s — SPMB JABAR" />
             <div className="min-h-screen bg-surface text-ink selection:bg-brand-100 selection:text-brand-900">
                 <header className="sticky top-0 z-50 border-b border-outline-variant bg-white/95 backdrop-blur">
+                    {/* Tricolor Bendera Jabar — biru (air) · emas (padi) · hijau (perisai) */}
+                    <div className="flex h-1 w-full" aria-hidden="true">
+                        <span className="flex-1 bg-flag-blue" />
+                        <span className="flex-1 bg-flag-gold" />
+                        <span className="flex-1 bg-brand-700" />
+                    </div>
                     <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <Link href={user ? '/dashboard' : '/'} className="flex items-center gap-3">
                             <img
