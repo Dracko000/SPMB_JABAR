@@ -73,6 +73,14 @@ export default function AppLayout({ header, children }) {
                         </Link>
 
                         <div className="flex items-center gap-2 sm:gap-4">
+                            {!user && (
+                                <div className="hidden items-center gap-1 md:flex">
+                                    <Link href="/docs" className="rounded-8 px-3 py-1.5 text-sm font-semibold text-ink-soft transition-colors hover:bg-surface-container hover:text-ink">
+                                        Dokumentasi
+                                    </Link>
+                                </div>
+                            )}
+
                             {nav.length > 0 && (
                                 <nav className="hidden items-center gap-1 md:flex">
                                     {nav.map((item) => {
@@ -143,6 +151,9 @@ export default function AppLayout({ header, children }) {
                             </Link>
                             <Link href="/public/announcement" className="font-medium transition-colors hover:text-brand-700">
                                 Pengumuman
+                            </Link>
+                            <Link href="/docs" className="font-medium transition-colors hover:text-brand-700">
+                                Dokumentasi
                             </Link>
                         </div>
                     </div>
