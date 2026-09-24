@@ -497,3 +497,64 @@ it('menegakkan matriks peran pada seluruh area sistem', function () {
     $this->actingAs($adminKab)->post('/admin/seleksi/publish')->assertForbidden();
     $this->actingAs($adminKab)->get('/smp')->assertForbidden();
 });
+
+it('menyediakan dokumentasi lengkap dengan akun demo yang benar-benar bisa login untuk semua peran', function () {
+    // ── 1. Halaman dokumentasi terbuka untuk publik ────────────────────
+    $this->get('/docs')->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Docs/Index')
+            ->has('accounts', 6)
+            ->has('paths', 4));
+
+    // ── 2. Semua akun yang terdokumentasi tersedia dengan peran benar ─
+    $expected = [
+        ['email' => 'admin.provinsi@spmb.jabar', 'role' => 'admin_provinsi'],
+        ['email' => 'admin.kab@spmb.jabar', 'role' => 'admin_kabkota'],
+        ['email' => 'operator.smpn1@spmb.jabar', 'role' => 'operator_sekolah'],
+        ['email' => 'operator.smp@spmb.jabar', 'role' => 'operator_smp'],
+        ['email' => 'verifikator@spmb.jabar', 'role' => 'verifikator'],
+        ['email' => 'peserta.demo@spmb.jabar', 'role' => 'pendaftar'],
+    ];
+
+    foreach ($expected as $u) {
+        $this->assertDatabaseHas('users', ['email' => $u['email'], 'role' => $u['role']]);
+    }
+
+    // Akun pendaftar demo tertaut ke data siswa (syarat wizard registrasi)
+    $demo = User::where('email', 'peserta.demo@spmb.jabar')->firstOrFail();
+    expect($demo->student_id)->not->toBeNull();
+    expect(Hash::check('0113456789', $demo->password))->toBeTrue();
+
+    // ── 3. Setiap kredensial terdokumentasi benar-benar bisa masuk ────
+    // Login staf (email + password). REMOTE_ADDR dibuat beda per request
+    // agar throttle login (3/menit) tidak memicu 429 pada IP yang sama.
+    $staff = [
+        ['email' => 'admin.provinsi@spmb.jabar', 'to' => '/admin'],
+        ['email' => 'admin.kab@spmb.jabar', 'to' => '/admin'],
+        ['email' => 'operator.smpn1@spmb.jabar', 'to' => '/verifikasi'],
+        ['email' => 'operator.smp@spmb.jabar', 'to' => '/dashboard'],
+        ['email' => 'verifikator@spmb.jabar', 'to' => '/verifikasi'],
+    ];
+
+    $octet = 0;
+    foreach ($staff as $u) {
+        $this->withServerVariables(['REMOTE_ADDR' => '10.9.1.'.(++$octet)])
+            ->post('/login', ['identifier' => $u['email'], 'password' => 'password'])
+            ->assertRedirect($u['to']);
+        $this->assertAuthenticated();
+        $this->post('/logout');
+    }
+
+    // Calon siswa demo: identifier NISN, kata sandi = NISN
+    $this->withServerVariables(['REMOTE_ADDR' => '10.9.1.'.(++$octet)])
+        ->post('/login', ['identifier' => '0113456789', 'password' => '0113456789'])
+        ->assertRedirect('/dashboard');
+    $this->assertAuthenticated();
+    $this->post('/logout');
+
+    // ── 4. Wilayah akses akun-akun terdokumentasi sesuai peran (spot) ─
+    $this->actingAs(User::where('email', 'admin.kab@spmb.jabar')->firstOrFail())
+        ->post('/admin/seleksi/publish')->assertForbidden();
+    $this->actingAs(User::where('email', 'operator.smp@spmb.jabar')->firstOrFail())
+        ->get('/verifikasi')->assertForbidden();
+});

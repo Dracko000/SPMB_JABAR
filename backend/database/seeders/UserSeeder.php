@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Region;
 use App\Models\School;
+use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -29,6 +30,10 @@ class UserSeeder extends Seeder
                 'role' => 'operator_sekolah', 'region' => $bandung?->id, 'school' => $smpn1Bdg?->id,
             ],
             [
+                'name' => 'Operator SMP Provinsi', 'email' => 'operator.smp@spmb.jabar',
+                'role' => 'operator_smp', 'region' => $jabar?->id, 'school' => null,
+            ],
+            [
                 'name' => 'Verifikator', 'email' => 'verifikator@spmb.jabar',
                 'role' => 'verifikator', 'region' => $jabar?->id, 'school' => null,
             ],
@@ -43,6 +48,26 @@ class UserSeeder extends Seeder
                     'role' => $u['role'],
                     'role_region_id' => $u['region'],
                     'school_id' => $u['school'],
+                ],
+            );
+        }
+
+        // Akun demo calon siswa (pendaftar) — login memakai NISN sebagai
+        // identifier DAN kata sandi (pattern Case 2 di AuthController).
+        // Dihubungkan ke persona Fitri Handayani, yang tidak dipakai oleh
+        // suite E2E sehingga tidak mengganggu journey-nya.
+        $demoStudent = Student::where('nisn', '0113456789')->first();
+
+        if ($demoStudent) {
+            User::updateOrCreate(
+                ['email' => 'peserta.demo@spmb.jabar'],
+                [
+                    'name' => 'Fitri Handayani (Demo)',
+                    'password' => $demoStudent->nisn,
+                    'role' => 'pendaftar',
+                    'role_region_id' => $bandung?->id,
+                    'school_id' => null,
+                    'student_id' => $demoStudent->id,
                 ],
             );
         }

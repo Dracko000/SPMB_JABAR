@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentViewController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SchoolController;
@@ -16,6 +17,7 @@ Route::get('/', [PublicController::class, 'info'])->name('landing');
 
 // Public information
 Route::get('info', [PublicController::class, 'info'])->name('public.info');
+Route::get('docs', [DocsController::class, 'index'])->name('docs');
 Route::get('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1,announcement')->name('public.announcement');
 Route::post('public/announcement', [PublicController::class, 'checkResult'])->middleware('throttle:10,1,announcement')->name('public.announcement.post');
 Route::get('public/directory', [PublicController::class, 'directory'])->name('public.directory');

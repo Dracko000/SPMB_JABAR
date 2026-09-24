@@ -144,6 +144,66 @@
     .micro {
         @apply text-[11px] font-bold uppercase tracking-widest text-ink-faint;
     }
+
+    /* ---- Dokumentasi ---- */
+    .docs-body {
+        @apply text-[15px] leading-relaxed text-ink-soft;
+    }
+    .docs-body h2 {
+        @apply scroll-mt-28 text-xl font-extrabold tracking-tight text-cemara sm:text-2xl;
+    }
+    .docs-body h3 {
+        @apply mt-7 text-base font-bold tracking-tight text-ink;
+    }
+    .docs-body p {
+        @apply mt-3 max-w-prose;
+    }
+    .docs-body ul {
+        @apply mt-3 space-y-2;
+    }
+    .docs-body li {
+        @apply relative pl-5 text-[15px];
+    }
+    .docs-body li::before {
+        content: '—';
+        @apply absolute left-0 font-bold text-brand-700;
+    }
+    .docs-body ol {
+        @apply mt-3 list-decimal space-y-2 pl-5 marker:font-bold marker:text-brand-700;
+    }
+    .docs-body ol.steps {
+        list-style: none;
+        padding-left: 0;
+        @apply mt-6 space-y-0;
+    }
+    .docs-body ol.steps > li {
+        @apply mb-4 flex gap-5;
+        padding-left: 0;
+    }
+    .docs-body ol.steps li::before {
+        content: none;
+    }
+    .docs-body a {
+        @apply font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800;
+    }
+    .code-token {
+        @apply rounded-8 border border-outline bg-surface-container-low px-2 py-0.5 font-mono text-[12.5px] font-medium text-ink;
+    }
+    .code-block {
+        @apply inline-flex items-center gap-2 rounded-8 border border-outline-variant bg-surface px-3 py-2 font-mono text-[12.5px] font-semibold text-ink;
+    }
+    .docs-table {
+        @apply w-full text-left text-sm;
+    }
+    .docs-table th {
+        @apply border-b border-outline bg-surface-container-low px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-ink-soft;
+    }
+    .docs-table td {
+        @apply border-b border-outline-variant px-4 py-3 align-top text-ink-soft;
+    }
+    .docs-table tr:last-child td {
+        @apply border-b-0;
+    }
 }
 
 /* Hide scrollbars for horizontal tab strips (used app-wide) */
