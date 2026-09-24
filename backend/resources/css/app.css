@@ -10,7 +10,7 @@
 /* ============================================================
    SPMB JABAR — design system
    Civic-trust palette: biru institusional (#0D6EB3) di atas
-   kertas hangat. Intentionally clean & restrained — no gradients,
+   netral dingin. Intentionally clean & restrained — no gradients,
    no decorative blobs, no colored shadows, no bounce motion.
    ============================================================ */
 @theme {
@@ -38,15 +38,15 @@
     --color-flag-red: #ed1c24;         /* ditolak / bahaya */
     --color-flag-red-deep: #c4141b;    /* teks di atas permukaan terang */
 
-    /* Neuters / surface — warm paper */
-    --color-surface: #f7f7f3;
-    --color-surface-container: #eeefe9;
-    --color-surface-container-low: #f3f4ef;
-    --color-surface-container-high: #e3e5dd;
-    --color-surface-container-highest: #d7dad0;
-    --color-surface-variant: #e3e5dd;
-    --color-outline: #cfd2c8;
-    --color-outline-variant: #e0e2da;
+    /* Neuters / surface — cool neutral (professional civic) */
+    --color-surface: #f7f8fa;
+    --color-surface-container: #eef1f4;
+    --color-surface-container-low: #f3f5f8;
+    --color-surface-container-high: #e3e7eb;
+    --color-surface-container-highest: #d5dae0;
+    --color-surface-variant: #e3e7eb;
+    --color-outline: #cdd4da;
+    --color-outline-variant: #e0e4e9;
 
     /* Ink — near-black with a subtle blue cast */
     --color-ink: #13202e;
