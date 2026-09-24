@@ -10,8 +10,9 @@
 /* ============================================================
    SPMB JABAR — design system
    Civic-trust palette: biru institusional (#0D6EB3) di atas
-   netral dingin. Intentionally clean & restrained — no gradients,
-   no decorative blobs, no colored shadows, no bounce motion.
+   permukaan biru muda; teks memakai biru tua yang sesuai.
+   Intentionally clean & restrained — no gradients, no decorative
+   blobs, no colored shadows, no bounce motion.
    ============================================================ */
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
@@ -38,23 +39,23 @@
     --color-flag-red: #ed1c24;         /* ditolak / bahaya */
     --color-flag-red-deep: #c4141b;    /* teks di atas permukaan terang */
 
-    /* Neuters / surface — cool neutral (professional civic) */
-    --color-surface: #f7f8fa;
-    --color-surface-container: #eef1f4;
-    --color-surface-container-low: #f3f5f8;
-    --color-surface-container-high: #e3e7eb;
-    --color-surface-container-highest: #d5dae0;
-    --color-surface-variant: #e3e7eb;
-    --color-outline: #cdd4da;
-    --color-outline-variant: #e0e4e9;
+    /* Neuters / surface — light blue (biru muda) */
+    --color-surface: #eef3f9;
+    --color-surface-container: #e3ecf6;
+    --color-surface-container-low: #e9f0f8;
+    --color-surface-container-high: #d6e2f0;
+    --color-surface-container-highest: #c6d6e8;
+    --color-surface-variant: #d9e4f0;
+    --color-outline: #b4c6d8;
+    --color-outline-variant: #ccdae7;
 
-    /* Ink — near-black with a subtle blue cast */
-    --color-ink: #13202e;
-    --color-ink-soft: #47586b;
-    --color-ink-faint: #6c7b8b;
+    /* Ink — deep institutional blue, sesuai permukaan biru muda */
+    --color-ink: #0b2b4a;
+    --color-ink-soft: #3d5872;
+    --color-ink-faint: #5c7690;
 
     /* Headline / CTA color on light surfaces */
-    --color-cemara: #052a44;
+    --color-cemara: #062a46;
     --color-teal: #2f7fb2;
 
     /* Semantic */
