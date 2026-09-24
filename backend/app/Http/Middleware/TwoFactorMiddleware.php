@@ -21,7 +21,7 @@ class TwoFactorMiddleware
 
         // Only enforce 2FA for admin roles (same scope as the login redirect
         // in AuthController) and only when they have enrolled a secret.
-        $needsTwoFactor = in_array($user->role, ['admin_provinsi', 'admin_kabkota'], true)
+        $needsTwoFactor = in_array($user->role, ['admin_provinsi', 'admin_kabkota', 'superadmin'], true)
             && ! empty($user->google2fa_secret);
 
         if ($needsTwoFactor && ! $request->session()->get('2fa_verified')) {

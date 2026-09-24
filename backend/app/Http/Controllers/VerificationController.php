@@ -15,20 +15,24 @@ class VerificationController extends Controller
     public function __construct(private readonly VerificationFlow $flow) {}
 
     /**
-     * operator_sekolah queue — registrations that chose their school.
+     * Antrean verifikasi. operator_sekolah hanya melihat pendaftar yang
+     * memilih sekolahnya; superadmin & pemegang hak can_verify_all melihat
+     * SELURUH pendaftar semua sekolah (acc lintas wilayah).
      */
     public function index(Request $request): Response
     {
-        $schoolId = $request->user()->school_id;
+        $user = $request->user();
+        $isGlobal = $user->role === 'superadmin' || (bool) $user->can_verify_all;
 
         $registrations = Registration::whereIn('status', ['submitted', 'terverifikasi_awal'])
-            ->whereHas('choices', fn ($q) => $q->where('school_id', $schoolId))
+            ->when(! $isGlobal, fn ($q) => $q->whereHas('choices', fn ($c) => $c->where('school_id', $user->school_id)))
             ->with(['student', 'path', 'choices.school', 'documents'])
             ->orderByDesc('created_at')
             ->get();
 
         return Inertia::render('Verification/Index', [
             'registrations' => $registrations,
+            'global' => $isGlobal,
         ]);
     }
 

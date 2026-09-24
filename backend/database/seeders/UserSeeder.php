@@ -18,6 +18,10 @@ class UserSeeder extends Seeder
 
         $users = [
             [
+                'name' => 'Super Admin Provinsi', 'email' => 'superadmin@spmb.jabar',
+                'role' => 'superadmin', 'region' => $jabar?->id, 'school' => null,
+            ],
+            [
                 'name' => 'Admin Provinsi', 'email' => 'admin.provinsi@spmb.jabar',
                 'role' => 'admin_provinsi', 'region' => $jabar?->id, 'school' => null,
             ],

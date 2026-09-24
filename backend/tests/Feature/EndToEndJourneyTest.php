@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Models\OtpCode;
 use App\Models\Quota;
 use App\Models\QuotaRequest;
+use App\Models\Region;
 use App\Models\Registration;
 use App\Models\School;
 use App\Models\SelectionResult;
@@ -498,16 +499,103 @@ it('menegakkan matriks peran pada seluruh area sistem', function () {
     $this->actingAs($adminKab)->get('/smp')->assertForbidden();
 });
 
+it('menjalankan peran superadmin: buat admin provinsi, reset 2FA, dan hak verifikasi global', function () {
+    $superadmin = User::where('email', 'superadmin@spmb.jabar')->firstOrFail();
+    expect($superadmin->role)->toBe('superadmin');
+
+    // ── 1. RBAC: hanya superadmin yang bisa membuka panel ─────────────
+    $this->actingAs($superadmin)->get('/superadmin')->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Superadmin/Dashboard'));
+    $this->actingAs(User::factory()->create(['role' => 'pendaftar']))->get('/superadmin')->assertForbidden();
+    $this->actingAs(User::factory()->create(['role' => 'admin_provinsi']))->get('/superadmin')->assertForbidden();
+    $this->actingAs(User::factory()->create(['role' => 'operator_smp']))->get('/superadmin')->assertForbidden();
+
+    // ── 2. Buat akun Admin Provinsi baru ──────────────────────────────
+    $region = Region::where('code', '3204')->first();
+    $this->actingAs($superadmin)->post('/superadmin/users', [
+        'name' => 'Admin Test Provinsi',
+        'email' => 'admin.test@spmb.jabar',
+        'password' => 'rahasia123',
+        'region_id' => $region?->id,
+    ])->assertRedirect('/superadmin');
+
+    $created = User::where('email', 'admin.test@spmb.jabar')->firstOrFail();
+    expect($created->role)->toBe('admin_provinsi');
+    expect(Hash::check('rahasia123', $created->password))->toBeTrue();
+    $this->assertDatabaseHas('audit_logs', ['event' => 'superadmin.admin.created']);
+
+    // Email duplikat ditolak → session error
+    $this->actingAs($superadmin)->post('/superadmin/users', [
+        'name' => 'Duplikat',
+        'email' => 'admin.test@spmb.jabar',
+        'password' => 'rahasia123',
+    ])->assertSessionHasErrors('email');
+
+    // Admin yang baru dibuat bisa login (email + password) ke Panel Admin
+    $this->post('/logout');
+    $this->post('/login', ['identifier' => 'admin.test@spmb.jabar', 'password' => 'rahasia123'])
+        ->assertRedirect('/admin');
+
+    // ── 3. Reset 2FA akun admin ───────────────────────────────────────
+    $admin = User::where('email', 'admin.provinsi@spmb.jabar')->firstOrFail();
+    $admin->update(['google2fa_secret' => app(Google2FA::class)->generateSecretKey()]);
+    expect($admin->fresh()->google2fa_secret)->not->toBeNull();
+
+    $this->actingAs($superadmin)->post("/superadmin/users/{$admin->id}/reset-2fa")
+        ->assertRedirect('/superadmin');
+    expect($admin->fresh()->google2fa_secret)->toBeNull();
+    $this->assertDatabaseHas('audit_logs', ['event' => 'superadmin.twofa.reset']);
+
+    // ── 4. Hak verifikasi global: acc SEMUA pendaftar semua sekolah ──
+    // Tanpa hak: admin provinsi tidak bisa masuk area verifikasi.
+    $this->actingAs($admin)->get('/verifikasi')->assertForbidden();
+
+    // Superadmin memberi hak.
+    $this->actingAs($superadmin)->post("/superadmin/users/{$admin->id}/verification-right")
+        ->assertRedirect('/superadmin');
+    expect($admin->fresh()->can_verify_all)->toBeTrue();
+    $this->assertDatabaseHas('audit_logs', ['event' => 'superadmin.verify.global.granted']);
+
+    // Registrasi dibangun untuk SEKOLAH A; admin ber-scope null (bukan sekolah A).
+    [$school, $path] = e2e_quotaReady();
+    $registration = e2e_submittedRegistration($school, $path);
+
+    // Dengan hak global, admin melihat SEMUA registrasi (tanpa filter sekolah)
+    // dan bisa menilai registrasi sekolah lain → status jadi 'verified'.
+    $this->actingAs($admin->fresh())->get('/verifikasi')->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Verification/Index')
+            ->where('global', true)
+            ->has('registrations', 1));
+
+    $this->actingAs($admin->fresh())->post("/verifikasi/{$registration->id}/review", [
+        'status' => 'valid',
+        'is_kk_verified' => '1',
+        'is_ijazah_verified' => '1',
+        'is_alamat_verified' => '1',
+        'catatan' => 'Diverifikasi global atas nama superadmin.',
+    ])->assertRedirect();
+    expect($registration->fresh()->status)->toBe('verified');
+
+    // Cabut hak → kembali diblokir.
+    $this->actingAs($superadmin)->post("/superadmin/users/{$admin->id}/verification-right")
+        ->assertRedirect('/superadmin');
+    expect($admin->fresh()->can_verify_all)->toBeFalse();
+    $this->assertDatabaseHas('audit_logs', ['event' => 'superadmin.verify.global.revoked']);
+    $this->actingAs($admin->fresh())->get('/verifikasi')->assertForbidden();
+});
+
 it('menyediakan dokumentasi lengkap dengan akun demo yang benar-benar bisa login untuk semua peran', function () {
     // ── 1. Halaman dokumentasi terbuka untuk publik ────────────────────
     $this->get('/docs')->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Docs/Index')
-            ->has('accounts', 6)
+            ->has('accounts', 7)
             ->has('paths', 4));
 
     // ── 2. Semua akun yang terdokumentasi tersedia dengan peran benar ─
     $expected = [
+        ['email' => 'superadmin@spmb.jabar', 'role' => 'superadmin'],
         ['email' => 'admin.provinsi@spmb.jabar', 'role' => 'admin_provinsi'],
         ['email' => 'admin.kab@spmb.jabar', 'role' => 'admin_kabkota'],
         ['email' => 'operator.smpn1@spmb.jabar', 'role' => 'operator_sekolah'],
@@ -529,6 +617,7 @@ it('menyediakan dokumentasi lengkap dengan akun demo yang benar-benar bisa login
     // Login staf (email + password). REMOTE_ADDR dibuat beda per request
     // agar throttle login (3/menit) tidak memicu 429 pada IP yang sama.
     $staff = [
+        ['email' => 'superadmin@spmb.jabar', 'to' => '/superadmin'],
         ['email' => 'admin.provinsi@spmb.jabar', 'to' => '/admin'],
         ['email' => 'admin.kab@spmb.jabar', 'to' => '/admin'],
         ['email' => 'operator.smpn1@spmb.jabar', 'to' => '/verifikasi'],

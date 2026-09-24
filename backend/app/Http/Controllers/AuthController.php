@@ -37,12 +37,13 @@ class AuthController extends Controller
                 $user = Auth::user();
 
                 // Check for 2FA if user is admin
-                if (in_array($user->role, ['admin_provinsi', 'admin_kabkota']) && $user->google2fa_secret) {
+                if (in_array($user->role, ['admin_provinsi', 'admin_kabkota', 'superadmin']) && $user->google2fa_secret) {
                     return redirect()->route('auth.two-factor.verify');
                 }
 
                 return (match ($user->role) {
                     'admin_provinsi', 'admin_kabkota' => redirect()->route('admin.index'),
+                    'superadmin' => redirect()->route('superadmin.index'),
                     'operator_sekolah', 'verifikator' => redirect()->route('verification.index'),
                     default => redirect()->route('dashboard.pendaftar'),
                 })->with('flash', ['success' => 'Selamat datang, '.$user->name]);

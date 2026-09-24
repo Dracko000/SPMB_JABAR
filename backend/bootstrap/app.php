@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\EnsureVerificationAccess;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\TwoFactorMiddleware;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureRole::class,
             'two.factor' => TwoFactorMiddleware::class,
+            'verify.access' => EnsureVerificationAccess::class,
         ]);
         $middleware->web(append: [
             ForceHttps::class,

@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'can_verify_all',
         'role_region_id',
         'school_id',
         'phone',
@@ -52,6 +53,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'can_verify_all' => 'boolean',
         ];
     }
 

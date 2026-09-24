@@ -41,8 +41,10 @@ class VerificationFlow
             throw new \InvalidArgumentException('Registrasi ini tidak dapat diverifikasi ulang.');
         }
 
-        // scope: operator only reviews a registration whose choices include their school
-        $scoped = $registration->choices()->where('school_id', $actor->school_id)->exists();
+        // scope: operator only reviews a registration whose choices include their school.
+        // superadmin & pemegang hak can_verify_all menilai SEMUA pendaftar (lintas sekolah).
+        $isGlobal = in_array($actor->role, ['superadmin'], true) || (bool) $actor->can_verify_all;
+        $scoped = $isGlobal || $registration->choices()->where('school_id', $actor->school_id)->exists();
 
         if (! $scoped) {
             abort(403, 'Registrasi ini tidak mengajukan ke sekolah Anda.');

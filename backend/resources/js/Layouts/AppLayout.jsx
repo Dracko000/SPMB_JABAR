@@ -28,6 +28,11 @@ const NAV = {
         { href: '/dashboard', label: 'Beranda' },
         { href: '/admin', label: 'Panel Admin' },
     ],
+    superadmin: [
+        { href: '/dashboard', label: 'Beranda' },
+        { href: '/superadmin', label: 'Super Admin' },
+        { href: '/verifikasi', label: 'Verifikasi' },
+    ],
 };
 
 const ROLE_LABELS = {
@@ -37,6 +42,7 @@ const ROLE_LABELS = {
     operator_smp: 'Operator SMP',
     admin_kabkota: 'Admin Kab/Kota',
     admin_provinsi: 'Admin Provinsi',
+    superadmin: 'Super Admin',
     admin: 'Admin',
 };
 

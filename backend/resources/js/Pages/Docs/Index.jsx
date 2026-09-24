@@ -19,9 +19,17 @@ const ROLE_LABELS = {
     verifikator: 'Verifikator',
     admin_kabkota: 'Admin Kab/Kota',
     admin_provinsi: 'Admin Provinsi',
+    superadmin: 'Super Admin',
 };
 
 const PERAN = [
+    {
+        role: 'superadmin',
+        title: 'Super Admin',
+        desc: 'Otoritas tertinggi sistem: mengelola akun Admin Provinsi, mereset autentikasi dua faktor (2FA), dan memberi hak verifikasi global — acc seluruh pendaftar di semua sekolah.',
+        akses: ['Buat & kelola akun Admin Provinsi', 'Reset 2FA akun admin', 'Beri / cabut hak verifikasi global', 'Verifikasi semua pendaftar (acc lintas sekolah)', 'Akses setara admin kab/kota'],
+        href: '/superadmin',
+    },
     {
         role: 'pendaftar',
         title: 'Calon Siswa / Peserta',

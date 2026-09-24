@@ -10,6 +10,7 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SmpController;
+use App\Http\Controllers\SuperadminController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,8 +67,9 @@ Route::middleware('auth')->group(function () {
     // Pengaduan (all roles; pendaftar scoped in controller)
     Route::resource('pengaduan', ComplaintController::class)->only(['index', 'store']);
 
-    // Verification — operator_sekolah
-    Route::prefix('verifikasi')->middleware(['role:operator_sekolah,verifikator'])->name('verification.')->group(function () {
+    // Verification — operator_sekolah, verifikator, superadmin
+    // & akun berhak 'can_verify_all' (verifikasi global lintas sekolah)
+    Route::prefix('verifikasi')->middleware(['verify.access'])->name('verification.')->group(function () {
         Route::get('/', [VerificationController::class, 'index'])->name('index');
         Route::post('{registration}/review', [VerificationController::class, 'review'])->name('review');
     });
@@ -105,5 +107,14 @@ Route::middleware('auth')->group(function () {
             Route::post('seleksi/publish', [AdminController::class, 'publishSelection'])->name('selection.publish');
             Route::post('seleksi/rules', [AdminController::class, 'saveSelectionRule'])->name('selection.rules');
         });
+    });
+
+    // Super Admin — kelola akun admin provinsi, reset 2FA,
+    // dan beri/ cabut hak verifikasi global (acc semua pendaftar).
+    Route::prefix('superadmin')->middleware(['role:superadmin', 'two.factor'])->name('superadmin.')->group(function () {
+        Route::get('/', [SuperadminController::class, 'index'])->name('index');
+        Route::post('users', [SuperadminController::class, 'storeAdmin'])->name('users.store');
+        Route::post('users/{user}/reset-2fa', [SuperadminController::class, 'resetTwoFactor'])->name('users.reset-2fa');
+        Route::post('users/{user}/verification-right', [SuperadminController::class, 'toggleVerificationRight'])->name('users.verification-right');
     });
 });

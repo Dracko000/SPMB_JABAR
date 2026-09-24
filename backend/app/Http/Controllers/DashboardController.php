@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Services\DashboardService;
+use App\Services\SuperadminService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,6 +32,7 @@ class DashboardController extends Controller
             'admin_kabkota' => Inertia::render('Dashboard/Kabkota', $this->svc->kabkota($request->user())),
             'admin_provinsi' => Inertia::render('Dashboard/Provinsi', $this->svc->provinsi()),
             'verifikator' => Inertia::render('Dashboard/Provinsi', $this->svc->provinsi()),
+            'superadmin' => Inertia::render('Superadmin/Dashboard', app(SuperadminService::class)->overview()),
             default => Inertia::render('Landing'),
         };
     }
