@@ -417,6 +417,8 @@ export default function DocsIndex({ paths, period, accounts, stats }) {
                             lead="Perlindungan data pendaftar adalah bagian dari desain sistem, bukan tambahan."
                         />
                         <ul>
+                            <li><strong className="text-ink">Integritas dokumen (hash SHA-256)</strong> — setiap berkas menyimpan sidik jarinya (hash + ukuran + nama asli) saat unggah. Verifikasi mengunci hash yang disetujui; berkas yang berubah setelah unggah terdeteksi, aksesnya diblokir, dan kejadiannya dicatat di log audit.</li>
+                            <li><strong className="text-ink">Ganti dokumen = verifikasi ulang</strong> — mengganti berkas setelah diverifikasi mencabut stempel persetujuan dan mengembalikan pendaftar ke antrean verifikasi. Stempel valid tidak pernah menempel pada berkas selain byte yang persis disetujui.</li>
                             <li><strong className="text-ink">Kode OTP di-hash &amp; berbatas waktu</strong> — kode verifikasi tidak pernah disimpan sebagai teks biasa, kedaluwarsa 5 menit, dan dibatasi percobaan.</li>
                             <li><strong className="text-ink">2FA untuk admin</strong> — peran admin dapat mewajibkan Google Authenticator pada setiap masuk.</li>
                             <li><strong className="text-ink">Penyamaran identitas</strong> — nama &amp; nomor pendaftaran disamarkan pada hasil publik (mis. <span className="code-token">Budi S•••</span>).</li>

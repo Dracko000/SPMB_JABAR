@@ -39,16 +39,11 @@ function ve_Registration(Student $student, array $overrides = []): Registration
     return $registration;
 }
 
-/** Upload the Zonasi mandatory documents (KK + Ijazah). */
+/** Upload the Zonasi mandatory documents (KK + Ijazah) as real files. */
 function ve_UploadMandatoryDocs(Registration $registration, array $types = ['KK', 'Ijazah']): void
 {
     foreach ($types as $type) {
-        Document::create([
-            'registration_id' => $registration->id,
-            'type' => $type,
-            'path' => "documents/dummy/{$type}.pdf",
-            'status' => 'menunggu',
-        ]);
+        e2e_touchDocument($registration, $type);
     }
 }
 

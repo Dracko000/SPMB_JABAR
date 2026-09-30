@@ -7,6 +7,7 @@ use App\Models\AdmissionPath;
 use App\Models\School;
 use App\Services\DocumentService;
 use App\Services\RegistrationFlow;
+use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,12 +80,34 @@ class RegistrationController extends Controller
             return back()->withErrors(['type' => 'Pilih jalur terlebih dahulu.']);
         }
 
-        $this->documents->store(
+        // Kebijakan ganti dokumen: mengganti berkas yang SUDAH disetujui
+        // (pin aktif) atau milik registrasi berstatus 'verified' mencabut
+        // stempel persetujuan lama dan mengembalikan registrasi ke antrean
+        // review — stempel valid tidak akan pernah bertahan dari pergantian
+        // berkas (anti pemalsuan dokumen).
+        $wasVerified = $registration->status === 'verified';
+        $wasPinned = $registration->documents()
+            ->where('type', $validated['type'])
+            ->whereNotNull('verified_sha256')
+            ->exists();
+
+        $document = $this->documents->store(
             $registration->id,
             $request->user()->student->nisn,
             $validated['type'],
             $validated['file'],
         );
+
+        if ($wasVerified || $wasPinned) {
+            $this->documents->revokeDueToReupload($registration, $validated['type']);
+
+            Audit::log('document.reuploaded_after_verified', [
+                'registration_id' => $registration->id,
+                'type' => $validated['type'],
+                'document_id' => $document->id,
+                'by' => $request->user()->email,
+            ], $registration);
+        }
 
         return back()->with('flash', ['success' => 'Dokumen diunggah.']);
     }

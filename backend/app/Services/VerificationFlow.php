@@ -19,6 +19,7 @@ class VerificationFlow
         private readonly NotificationBus $notifications,
         private readonly QuotaService $quota,
         private readonly NotificationService $notifier,
+        private readonly DocumentService $documents,
     ) {}
 
     public function review(
@@ -50,6 +51,14 @@ class VerificationFlow
             abort(403, 'Registrasi ini tidak mengajukan ke sekolah Anda.');
         }
 
+        // ── Gerbang integritas dokumen (anti pemalsuan) ─────────────────
+        // Sebelum SATU pun tulisan terjadi, bukti harus utuh: verifikator
+        // tidak boleh menyetujui berkas yang sudah berubah/hilang, dan tidak
+        // boleh ada stempel yang menempel di byte selain yang asli diunggah.
+        if ($status === 'valid') {
+            $this->assertIntegrity($registration);
+        }
+
         // Verify + free seats atomically: a failure mid-loop must not leave a
         // registration re-statused while its reserved seats stay stuck. The
         // document flags are written here too — only after the scope check
@@ -72,6 +81,33 @@ class VerificationFlow
             }
 
             $registration->update($update);
+
+            // Kunci sidik jari berkas yang persis disetujui (status 'valid'):
+            // stempel "dokumen valid" terikat ke byte yang diverifikasi, dan
+            // flag yang tidak disetujui mencabut pin hash sebelumnya.
+            if ($status === 'valid') {
+                $latestPerType = $registration->documents
+                    ->groupBy('type')
+                    ->map(fn ($group) => $group->sortByDesc('id')->first());
+
+                foreach ($latestPerType as $document) {
+                    $flag = match (strtolower((string) $document->type)) {
+                        'kk' => 'is_kk_verified',
+                        'ijazah' => 'is_ijazah_verified',
+                        default => null,
+                    };
+
+                    if (! $flag) {
+                        continue;
+                    }
+
+                    if (! empty($update[$flag])) {
+                        $this->documents->pinVerified($document);
+                    } else {
+                        $this->documents->clearVerification($document);
+                    }
+                }
+            }
 
             // Rejected/needs-revision registrations free their reserved seats so
             // the pool reflects only live reservations. A nontransitional
@@ -109,5 +145,35 @@ class VerificationFlow
         }
 
         return $verification;
+    }
+
+    /**
+     * Gerbang integritas sebelum status 'valid' ditulis: semua dokumen wajib
+     * jalur terunggah dan ISINYA utuh (ada di disk + hash cocok). Gagal →
+     * 409 tanpa satu tulisan pun; anomali sudah tercatat di log audit.
+     */
+    private function assertIntegrity(Registration $registration): void
+    {
+        $present = $registration->documents
+            ->map(fn ($d) => strtolower((string) $d->type))
+            ->all();
+
+        foreach ($this->documents->requiredTypes($registration) as $required) {
+            if (! in_array($required, $present, true)) {
+                abort(409, 'Dokumen wajib jalur ('.strtoupper($required).') belum diunggah — verifikasi tidak dapat disetujui.');
+            }
+        }
+
+        foreach ($registration->documents as $document) {
+            $state = $this->documents->auditIntegrity($document);
+
+            if ($state['status'] === 'missing') {
+                abort(409, 'Berkas '.$document->type.' hilang dari penyimpanan — verifikasi dibatalkan. Kejadian telah dicatat.');
+            }
+
+            if ($state['status'] === 'tampered') {
+                abort(409, 'Berkas '.$document->type.' berubah setelah unggahan (hash tidak cocok) — verifikasi dibatalkan. Kejadian telah dicatat.');
+            }
+        }
     }
 }

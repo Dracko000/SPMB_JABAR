@@ -10,6 +10,13 @@ const DECISIONS = [
     ['ditolak', 'Ditolak'],
 ];
 
+const INTEGRITY = {
+    ok: null,
+    tampered: { label: '⚠ BERUBAH SETELAH UNGGAH', cls: 'bg-error-container text-error ring-error' },
+    missing: { label: '✗ BERKAS HILANG', cls: 'bg-error-container text-error ring-error' },
+    untracked: { label: 'TANPA HASH', cls: 'bg-warn-100 text-warn-600 ring-warn-300' },
+};
+
 export default function Index({ registrations }) {
     const { flash, errors } = usePage().props;
     const [open, setOpen] = useState(null);
@@ -59,23 +66,57 @@ export default function Index({ registrations }) {
                                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                                     <div>
                                         <h3 className="micro mb-4">Dokumen Persyaratan</h3>
+                                        <p className="-mt-2 mb-3 text-xs leading-relaxed text-ink-faint">
+                                            Setiap berkas dicek sidik jarinya (hash SHA-256). Berkas yang
+                                            berubah sejak unggah ditandai merah dan aksesnya diblokir.
+                                        </p>
                                         <div className="divide-y divide-outline-variant">
                                             {r.documents?.length === 0 && (
                                                 <p className="text-sm italic text-ink-faint">Belum ada dokumen terunggah.</p>
                                             )}
                                             {r.documents.map((d) => (
-                                                <div key={d.id} className="flex items-center justify-between py-3 text-sm">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex size-7 items-center justify-center rounded-8 bg-surface-container text-ink-soft">
-                                                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                            </svg>
+                                                <div key={d.id} className="py-3 text-sm">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex size-7 items-center justify-center rounded-8 bg-surface-container text-ink-soft">
+                                                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                </svg>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-ink">{d.type}</p>
+                                                                <p className="text-xs text-ink-faint">
+                                                                    {d.original_name ?? 'berkas'}
+                                                                    {d.size_kb ? ` · ${d.size_kb} KB` : ''}
+                                                                    {d.sha256 ? ` · sha:${d.sha256}…` : ''}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <span className="font-bold text-ink">{d.type}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        {d.catatan && <span className="text-xs italic text-ink-faint">{d.catatan}</span>}
-                                                        <Badge status={d.status} />
+                                                        <div className="flex items-center gap-2.5">
+                                                            {INTEGRITY[d.integrity] && (
+                                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ring-1 ring-inset ${INTEGRITY[d.integrity].cls}`}>
+                                                                    {INTEGRITY[d.integrity].label}
+                                                                </span>
+                                                            )}
+                                                            {d.verified && (
+                                                                <span className="inline-flex items-center rounded-full bg-cemara px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white">
+                                                                    Disetujui ✓
+                                                                </span>
+                                                            )}
+                                                            <a
+                                                                href={`/documents/view/${d.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1 rounded-8 border border-outline bg-white px-2.5 py-1 text-xs font-bold text-ink transition-colors hover:border-brand-700 hover:text-brand-800"
+                                                            >
+                                                                Lihat
+                                                                <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                                </svg>
+                                                            </a>
+                                                            {d.catatan && <span className="text-xs italic text-ink-faint">{d.catatan}</span>}
+                                                            <Badge status={d.status} />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}

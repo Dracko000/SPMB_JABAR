@@ -30,12 +30,7 @@ function submittedRegistration(School $school, AdmissionPath $path): Registratio
         default => ['KK', 'Ijazah'], // zonasi
     };
     foreach ($required as $type) {
-        Document::create([
-            'registration_id' => $reg->id,
-            'type' => $type,
-            'path' => "documents/dummy/{$type}.pdf",
-            'status' => 'menunggu',
-        ]);
+        e2e_touchDocument($reg, $type);
     }
 
     $flow->submit($reg);

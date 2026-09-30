@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\RegistrationFlow;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use PragmaRX\Google2FALaravel\Google2FA;
 
@@ -49,9 +50,34 @@ function e2e_quotaReady(): array
 }
 
 /**
+ * Tulis dokumen sebagai FILE sungguhan di disk lokal + sidik jari integritas
+ * (sha256/ukuran/mime), persis seperti jalur unggah asli — sehingga seluruh
+ * gerbang integritas (hash cocok, akses, pin verifikasi) berlaku di test.
+ */
+function e2e_touchDocument(Registration $registration, string $type): Document
+{
+    $content = 'SPMB-E2E-'.$type.'-'.bin2hex(random_bytes(12));
+    $nisn = $registration->student?->nisn ?? 'dummy';
+    $path = "documents/{$nisn}/{$type}-".uniqid().'.pdf';
+
+    Storage::disk('local')->put($path, $content);
+
+    return Document::create([
+        'registration_id' => $registration->id,
+        'type' => $type,
+        'path' => $path,
+        'status' => 'menunggu',
+        'sha256' => hash('sha256', $content),
+        'size_bytes' => strlen($content),
+        'mime' => 'application/pdf',
+        'original_name' => "{$type}.pdf",
+    ]);
+}
+
+/**
  * Drive a registration to 'submitted' via the real RegistrationFlow service
  * (same code path the wizard uses), uploading exactly the mandatory documents
- * for the chosen path.
+ * for the chosen path as real files with integrity fingerprints.
  */
 function e2e_submittedRegistration(School $school, AdmissionPath $path): Registration
 {
@@ -79,12 +105,7 @@ function e2e_submittedRegistration(School $school, AdmissionPath $path): Registr
     };
 
     foreach ($required as $type) {
-        Document::create([
-            'registration_id' => $registration->id,
-            'type' => $type,
-            'path' => "documents/dummy/{$type}.pdf",
-            'status' => 'menunggu',
-        ]);
+        e2e_touchDocument($registration, $type);
     }
 
     $flow->submit($registration);

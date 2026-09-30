@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Registration;
+use App\Models\Document;
+use App\Services\DocumentService;
 use App\Services\VerificationFlow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +14,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class VerificationController extends Controller
 {
-    public function __construct(private readonly VerificationFlow $flow) {}
+    public function __construct(
+        private readonly VerificationFlow $flow,
+        private readonly DocumentService $documents,
+    ) {}
 
     /**
      * Antrean verifikasi. operator_sekolah hanya melihat pendaftar yang
@@ -26,12 +31,35 @@ class VerificationController extends Controller
 
         $registrations = Registration::whereIn('status', ['submitted', 'terverifikasi_awal'])
             ->when(! $isGlobal, fn ($q) => $q->whereHas('choices', fn ($c) => $c->where('school_id', $user->school_id)))
-            ->with(['student', 'path', 'choices.school', 'documents'])
+            ->with(['student', 'path', 'path.requirements', 'choices.school', 'documents'])
             ->orderByDesc('created_at')
             ->get();
 
         return Inertia::render('Verification/Index', [
-            'registrations' => $registrations,
+            'registrations' => $registrations->map(function (Registration $r) {
+                return [
+                    'id' => $r->id,
+                    'no_pendaftaran' => $r->no_pendaftaran,
+                    'status' => $r->status,
+                    'student' => $r->student,
+                    'path' => $r->path,
+                    'choices' => $r->choices->map(fn ($c) => ['school' => $c->school]),
+                    'documents' => $r->documents
+                        ->sortByDesc('id')
+                        ->map(fn (Document $d) => [
+                            'id' => $d->id,
+                            'type' => $d->type,
+                            'status' => $d->status,
+                            'catatan' => $d->catatan,
+                            'original_name' => $d->original_name,
+                            'size_kb' => $d->size_bytes ? round($d->size_bytes / 1024, 1) : null,
+                            'sha256' => $d->sha256 ? substr($d->sha256, 0, 12) : null,
+                            'verified' => ! is_null($d->verified_sha256),
+                            'integrity' => $this->documents->integrity($d)['status'],
+                        ])
+                        ->values(),
+                ];
+            })->values(),
             'global' => $isGlobal,
         ]);
     }

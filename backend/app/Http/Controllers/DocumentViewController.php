@@ -3,14 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Services\DocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class DocumentViewController extends Controller
 {
+    public function __construct(private readonly DocumentService $documents) {}
+
     /**
-     * Serve a private document file with strict ownership checks.
+     * Serve a private document file with strict ownership checks and an
+     * integrity gate: access is blocked (with audit trail) when the stored
+     * bytes no longer match the fingerprint recorded at upload time.
      */
     public function show(Request $request, $id): Response
     {
@@ -18,31 +23,29 @@ class DocumentViewController extends Controller
         $registration = $document->registration;
         $user = $request->user();
 
-        // Ownership check:
-        // 1. The student who owns the registration
-        // 2. A verifikator/operator_sekolah assigned to the same school as the registration choices
-        // 3. An admin_provinsi/admin_kabkota
-
         $isOwner = $registration->user_id === $user->id;
-        $isAdmin = in_array($user->role, ['admin_provinsi', 'admin_kabkota']);
+        $isAdmin = in_array($user->role, ['admin_provinsi', 'admin_kabkota'], true);
+        $isVerificator = in_array($user->role, ['operator_sekolah', 'verifikator'], true);
+        $isGlobal = $user->role === 'superadmin' || (bool) $user->can_verify_all;
 
-        // Check if user is a verifikator for any of the schools the student applied to
-        $isVerifikator = false;
-        if (in_array($user->role, ['operator_sekolah', 'verifikator'])) {
-            // In a real app, we'd check if $user is linked to a specific school.
-            // For now, assume if they have the role, they are verified via the school context.
-            // To be strict, we should check $user->school_id === $registration->choices->first()->school_id
-            $isVerifikator = true;
-        }
-
-        if (! $isOwner && ! $isAdmin && ! $isVerifikator) {
+        if (! $isOwner && ! $isAdmin && ! $isVerificator && ! $isGlobal) {
             abort(403, 'Anda tidak memiliki izin untuk mengakses dokumen ini.');
         }
 
-        if (! Storage::disk('local')->exists($document->path)) {
-            abort(404, 'File dokumen tidak ditemukan.');
+        // ── Gerbang integritas (anti pengubahan dokumen) ────────────────
+        $state = $this->documents->auditIntegrity($document);
+
+        if ($state['status'] === 'missing') {
+            abort(404, 'Berkas tidak ditemukan di penyimpanan. Kejadian ini telah dicatat.');
         }
 
-        return Storage::disk('local')->response($document->path);
+        if ($state['status'] === 'tampered') {
+            abort(409, 'Berkas berubah setelah unggahan (hash tidak cocok). Akses diblokir dan kejadian ini telah dicatat.');
+        }
+
+        $response = Storage::disk('local')->response($document->path);
+        $response->headers->set('X-Document-SHA256', substr((string) $document->sha256, 0, 16));
+
+        return $response;
     }
 }
