@@ -59,11 +59,17 @@ class DocumentService
      */
     public function integrity(Document $document): array
     {
+        $disk = Storage::disk(self::DISK);
+
         if (! $document->sha256) {
+            // Dokumen legacy (sebelum fitur hash): tidak bisa diperbandingkan,
+            // tapi setidaknya isinya harus ADA di penyimpanan.
+            if (! $disk->exists($document->path)) {
+                return ['status' => 'missing', 'hash' => null];
+            }
+
             return ['status' => 'untracked', 'hash' => null];
         }
-
-        $disk = Storage::disk(self::DISK);
 
         if (! $disk->exists($document->path)) {
             return ['status' => 'missing', 'hash' => null];
@@ -104,12 +110,29 @@ class DocumentService
     /** Kunci (pin) sidik jari yang persis disetujui verifikator. */
     public function pinVerified(Document $document): void
     {
+        // Backfill untuk dokumen legacy (sha256 kosong): hash dihitung dari
+        // isi berkas yang DISETUJUI saat itu, sehingga stempel terikat ke
+        // byte yang benar dan pengubahan berikutnya tetap terdeteksi.
+        if (! $document->sha256) {
+            $document->sha256 = $this->currentHash($document->path);
+        }
+
         $document->update([
+            'sha256' => $document->sha256,
             'verified_sha256' => $document->sha256,
             'verified_at' => now(),
             'status' => 'valid',
             'catatan' => null,
         ]);
+    }
+
+    private function currentHash(?string $path): ?string
+    {
+        if (! $path || ! Storage::disk(self::DISK)->exists($path)) {
+            return null;
+        }
+
+        return hash_file('sha256', Storage::disk(self::DISK)->path($path));
     }
 
     /** Cabut stempel persetujuan — bukti harus diperiksa ulang. */

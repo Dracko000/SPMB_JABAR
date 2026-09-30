@@ -183,6 +183,29 @@ it('mengganti dokumen setelah verifikasi mencabut pin, mereset flag, dan mengemb
             ->where('registrations.0.id', $reg->id));
 });
 
+it('menghitung hash dokumen legacy saat pertama kali disetujui (backfill pin)', function () {
+    [$school, $path] = e2e_quotaReady();
+    $reg = e2e_submittedRegistration($school, $path);
+
+    // Simulasikan dokumen yang diunggah SEBELUM fitur hash: tanpa sha256,
+    // tetapi isi berkasnya masih ada di penyimpanan.
+    $kk = $reg->documents()->where('type', 'KK')->latest('id')->first();
+    $content = Storage::disk('local')->get($kk->path);
+    $kk->update(['sha256' => null, 'verified_sha256' => null, 'verified_at' => null, 'status' => 'menunggu']);
+
+    $this->actingAs(di_scopedOperator($school))->post("/verifikasi/{$reg->id}/review", [
+        'status' => 'valid',
+        'is_kk_verified' => '1',
+        'is_ijazah_verified' => '1',
+        'is_alamat_verified' => '1',
+    ])->assertRedirect();
+
+    $pinned = $kk->fresh();
+    expect($pinned->sha256)->toBe(hash('sha256', $content));
+    expect($pinned->verified_sha256)->toBe($pinned->sha256);
+    expect($pinned->verified_at)->not->toBeNull();
+});
+
 it('mengizinkan pemilik dan super admin membuka berkas utuh; menolak orang lain', function () {
     [$school, $path] = e2e_quotaReady();
     $reg = e2e_submittedRegistration($school, $path);
