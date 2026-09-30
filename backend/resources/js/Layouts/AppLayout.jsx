@@ -27,10 +27,12 @@ const NAV = {
     admin_provinsi: [
         { href: '/dashboard', label: 'Beranda' },
         { href: '/admin', label: 'Panel Admin' },
+        { href: '/monitoring', label: 'Monitoring' },
     ],
     superadmin: [
         { href: '/dashboard', label: 'Beranda' },
         { href: '/superadmin', label: 'Super Admin' },
+        { href: '/monitoring', label: 'Monitoring' },
         { href: '/verifikasi', label: 'Verifikasi' },
     ],
 };

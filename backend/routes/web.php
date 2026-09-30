@@ -9,6 +9,7 @@ use App\Http\Controllers\DocsController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SecurityMonitoringController;
 use App\Http\Controllers\SecurityReportController;
 use App\Http\Controllers\SmpController;
 use App\Http\Controllers\SuperadminController;
@@ -124,4 +125,13 @@ Route::middleware('auth')->group(function () {
         Route::post('users/{user}/reset-2fa', [SuperadminController::class, 'resetTwoFactor'])->name('users.reset-2fa');
         Route::post('users/{user}/verification-right', [SuperadminController::class, 'toggleVerificationRight'])->name('users.verification-right');
     });
+
+    // Monitoring keamanan — log audit jadi angka & anomali yang bisa ditindaklanjuti.
+    // 2FA tetap ditegakkan: halaman ini menampilkan jejak audit seluruh sistem.
+    Route::prefix('monitoring')
+        ->middleware(['role:superadmin,admin_provinsi', 'two.factor'])
+        ->name('monitoring.')
+        ->group(function () {
+            Route::get('/', [SecurityMonitoringController::class, 'index'])->name('index');
+        });
 });
