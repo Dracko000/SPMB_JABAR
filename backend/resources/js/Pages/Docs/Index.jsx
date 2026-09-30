@@ -431,6 +431,8 @@ export default function DocsIndex({ paths, period, accounts, stats }) {
                             <li><strong className="text-ink">Log audit</strong> — login, verifikasi, seleksi, dan publikasi tercatat dengan siapa + kapan.</li>
                             <li><strong className="text-ink">Kunci akses per peran</strong> — operator sekolah tidak dapat mengakses panel admin; pendaftar tidak dapat membuka verifikasi, dst.</li>
                             <li><strong className="text-ink">Pembatasan laju (rate limit)</strong> — percobaan login, kirim OTP, dan verifikasi OTP dibatasi agar tidak dapat ditebak dengan paksa.</li>
+                            <li><strong className="text-ink">Header keamanan (CSP)</strong> — peramban menegakkan Content-Security-Policy berbasis <span className="code-token">nonce</span>, laden dalam bingkai, dan hak akses perangkat. Skrip yang disisipkan tanpa izin otomatis ditolak, dan halaman tidak dapat dibingkai situs lain (clickjacking).</li>
+                            <li><strong className="text-ink">Peringatan Developer Tools</strong> — pada area yang memerlukan login, upaya membuka console browser dicegah, ditampilkan peringatan, dan <strong>dicatat dalam log audit</strong>. Catatan jujur: browser tetap dapat dibuka lewat cara lain; efek nyata dari fitur ini adalah penyalahgunaan menjadi terlihat, bukan mustahil dilakukan.</li>
                         </ul>
                     </section>
 

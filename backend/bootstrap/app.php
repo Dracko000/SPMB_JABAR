@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\EnsureVerificationAccess;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TwoFactorMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(append: [
             ForceHttps::class,
+            // Security headers first so they wrap the whole response,
+            // including anything the Inertia middleware renders.
+            SecurityHeaders::class,
             HandleInertiaRequests::class,
         ]);
     })

@@ -9,6 +9,7 @@ use App\Http\Controllers\DocsController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SecurityReportController;
 use App\Http\Controllers\SmpController;
 use App\Http\Controllers\SuperadminController;
 use App\Http\Controllers\VerificationController;
@@ -30,6 +31,12 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'loginPage'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:3,1,login');
 });
+
+// Client-side console/devtools detection reports (deterrence + audit trail).
+// Throttled so a looping client cannot flood audit_logs.
+Route::post('security/console-report', [SecurityReportController::class, 'consoleAttempt'])
+    ->middleware('throttle:30,1,console-report')
+    ->name('security.console.report');
 
 // Legacy OTP flow (keep if still needed for some, otherwise can be removed)
 Route::get('auth/nisn', [AuthController::class, 'nisn'])->name('auth.nisn');
