@@ -36,7 +36,7 @@ export default function Login() {
                                 Satu akun untuk seluruh peran.
                             </h1>
                             <p className="mt-4 text-sm leading-relaxed text-brand-200">
-                                Calon siswa masuk dengan NISN; staf masuk dengan email.
+                                Calon siswa masuk lewat NISN → OTP; staf masuk dengan email.
                                 Hak akses menyesuaikan peran Anda secara otomatis.
                             </p>
                         </div>

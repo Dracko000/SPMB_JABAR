@@ -48,7 +48,7 @@ const PERAN = [
         role: 'operator_smp',
         title: 'Operator SMP',
         desc: 'Pengelola data siswa untuk intake (registrasi data murid baru ke basis data, termasuk membuat akun pendaftar bagi siswa manual).',
-        akses: ['Kelola data siswa / intake manual', 'Setiap siswa tersinkron dan dapat login via NISN'],
+        akses: ['Kelola data siswa / intake manual', 'Akun siswa dibuat tanpa kata sandi NISN — siswa mengaktifkan & masuk lewat NISN → OTP'],
         href: '/smp',
     },
     {
@@ -82,6 +82,10 @@ const FAQ = [
     {
         q: 'Data apa yang harus sesuai dengan sumber resmi?',
         a: 'Nama, NISN, NIK, tanggal lahir, dan sekolah asal diambil dari kanal data resmi saat login via NISN (prinsip “Satu Data”). Selisih data akan ditandai sebagai “perlu verifikasi” oleh petugas.',
+    },
+    {
+        q: 'Apakah NISN bisa dipakai sebagai kata sandi?',
+        a: 'Tidak. NISN adalah nomor identitas, bukan rahasia — ia tercetak di rapor dan diketahui banyak pihak. Akun siswa diaktifkan lewat NISN → OTP, dan begitu akun aktif, kombinasi NISN + NIK + tanggal lahir dikunci sebagai sidik jari. Bila sumber data kemudian mengirim NIK atau tanggal lahir yang berbeda, sinkron otomatis DITOLAK dan dicatat sebagai anomali untuk diperiksa petugas — sehingga satu NISN tidak dapat diam-diam menukar NIK dan mengotori integrasi lain.',
     },
     {
         q: 'Berapa sekolah yang bisa dipilih?',
@@ -201,7 +205,7 @@ export default function DocsIndex({ paths, period, accounts, stats }) {
                         <h3>Prinsip penyelenggaraan</h3>
                         <ul>
                             <li><strong className="text-ink">Transparan</strong> — kuota, status, dan hasil seleksi dapat dipantau pendaftar; hasil umum disamarkan demi privasi.</li>
-                            <li><strong className="text-ink">Satu Data</strong> — NISN adalah kunci identitas; biodata tidak perlu diisi ulang dan disinkronkan dari sumber resmi.</li>
+                            <li><strong className="text-ink">Satu Data</strong> — NISN adalah kunci identitas; biodata tidak perlu diisi ulang dan disinkronkan dari sumber resmi. Begitu akun aktif, identitas itu dikunci sebagai sidik jari sehingga tidak dapat ditukar diam-diam.</li>
                             <li><strong className="text-ink">Akuntabel</strong> — semua aksi penting (login, verifikasi, seleksi, publish) tercatat di log audit.</li>
                             <li><strong className="text-ink">Gratis</strong> — tidak ada biaya apa pun di seluruh tahapan.</li>
                         </ul>
@@ -418,6 +422,8 @@ export default function DocsIndex({ paths, period, accounts, stats }) {
                         />
                         <ul>
                             <li><strong className="text-ink">Integritas dokumen (hash SHA-256)</strong> — setiap berkas menyimpan sidik jarinya (hash + ukuran + nama asli) saat unggah. Verifikasi mengunci hash yang disetujui; berkas yang berubah setelah unggah terdeteksi, aksesnya diblokir, dan kejadiannya dicatat di log audit.</li>
+                            <li><strong className="text-ink">NISN bukan kata sandi</strong> — NISN adalah nomor identitas yang tercetak di rapor, bukan kredensial. Akun siswa diaktifkan lewat NISN → OTP, sehingga mengetahui NISN saja tidak cukup untuk masuk.</li>
+                            <li><strong className="text-ink">Rantai identitas terkunci (NISN → NIK)</strong> — saat akun pertama diklaim, kombinasi NISN + NIK + tanggal lahir di-hash dan dikunci. Bila sumber data resmi mengirim NIK atau tanggal lahir yang berbeda, sinkron otomatis ditolak dan dicatat sebagai anomali; NIK tidak dapat ditukar diam-diam lalu diteruskan ke integrasi lain.</li>
                             <li><strong className="text-ink">Ganti dokumen = verifikasi ulang</strong> — mengganti berkas setelah diverifikasi mencabut stempel persetujuan dan mengembalikan pendaftar ke antrean verifikasi. Stempel valid tidak pernah menempel pada berkas selain byte yang persis disetujui.</li>
                             <li><strong className="text-ink">Kode OTP di-hash &amp; berbatas waktu</strong> — kode verifikasi tidak pernah disimpan sebagai teks biasa, kedaluwarsa 5 menit, dan dibatasi percobaan.</li>
                             <li><strong className="text-ink">2FA untuk admin</strong> — peran admin dapat mewajibkan Google Authenticator pada setiap masuk.</li>

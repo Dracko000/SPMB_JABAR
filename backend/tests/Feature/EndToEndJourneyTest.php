@@ -460,17 +460,33 @@ it('menjalankan intake siswa oleh operator SMP sampai akun pendaftar bisa login'
         'alamat' => 'Jl. Lain No. 2',
     ])->assertSessionHasErrors('nisn');
 
-    // Akun pendaftar dibuat sekaligus tertaut ke data siswa
+    // Akun pendaftar dibuat tertaut ke data siswa dengan password ACAK —
+    // NISN bukan kredensial; akun diklaim lewat NISN → OTP.
     $createdUser = User::where('email', 'gita.lulusan@contoh.id')->firstOrFail();
     expect($createdUser->role)->toBe('pendaftar');
     expect($createdUser->student_id)->toBe($student->id);
-    expect(Hash::check($nisn, $createdUser->password))->toBeTrue();
+    expect(Hash::check($nisn, $createdUser->password))->toBeFalse();
 
-    // Siswa lulusan baru langsung bisa login dengan NISN sebagai password.
-    // (Logout operator SMP dulu — sesi test masih memegang operator.)
+    // NISN bukan kata sandi: login NISN-as-password DITOLAK (pola itu
+    // khusus akun demo). (Logout operator SMP dulu — sesi test masih
+    // memegang operator. IP unik karena throttle login adalah 3/menit.)
     $this->post('/logout');
-    $this->post('/login', ['identifier' => $nisn, 'password' => $nisn])
-        ->assertRedirect('/dashboard');
+    $this->withServerVariables(['REMOTE_ADDR' => '10.9.8.15'])
+        ->post('/login', ['identifier' => $nisn, 'password' => $nisn])
+        ->assertSessionHasErrors('identifier');
+    $this->assertGuest();
+
+    // Siswa lulusan baru mengklaim akunnya lewat NISN → OTP.
+    $this->post('/auth/nisn', ['nisn' => $nisn])->assertOk();
+    $this->post('/auth/otp/send', ['nisn' => $nisn])->assertOk();
+    $otp = OtpCode::where('nisn', $nisn)->whereNull('verified_at')->latest('id')->firstOrFail();
+    $otp->update(['code_hash' => Hash::make('654321')]);
+
+    $this->post('/auth/otp/verify', [
+        'nisn' => $nisn,
+        'request_token' => $otp->request_token,
+        'code' => '654321',
+    ])->assertRedirect('/dashboard');
     $this->assertAuthenticated();
 
     // ... dan bisa membuka wizard pendaftaran

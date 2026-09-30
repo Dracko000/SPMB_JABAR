@@ -52,11 +52,15 @@ class AuthController extends Controller
             return back()->withErrors(['identifier' => 'Email atau kata sandi salah.'])->withInput();
         }
 
-        // Case 2: Student Login (NISN)
+        // Case 2: Student Login (NISN) — HANYA untuk akun yang ditandai
+        // demo_login (akun demo/uji). NISN bukan kredensial: akun siswa
+        // operasional dibuat dengan password acak dan masuk lewat NISN→OTP,
+        // sehingga "tahu NISN" saja tidak cukup untuk mengambil alih akun.
         if (strlen($identifier) === 10 && ctype_digit($identifier)) {
             if ($identifier === $password) {
                 try {
                     $user = User::where('role', 'pendaftar')
+                        ->where('demo_login', true)
                         ->whereHas('student', fn ($q) => $q->where('nisn', $identifier))
                         ->first();
 

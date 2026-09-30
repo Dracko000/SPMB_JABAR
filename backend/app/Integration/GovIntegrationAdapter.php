@@ -24,26 +24,27 @@ class GovIntegrationAdapter implements DataIntegrationGateway
             throw new StudentNotFoundException("Data untuk NISN {$nisn} tidak tersedia.");
         }
 
-        // Map array dari service ke StudentRecord DTO
+        // Map array dari service ke StudentRecord DTO (hanya field yang
+        // dimiliki DTO — field ekstra upstream TIDAK diteruskan).
         return new StudentRecord(
-            nisn: $data['identity']['nisn'],
-            nik: $data['identity']['nik'],
-            nama: $data['identity']['nama'],
-            tanggalLahir: $data['identity']['tanggal_lahir'],
-            jenisKelamin: $data['identity']['jenis_kelamin'],
-            agama: $data['identity']['agama'],
-            statusPeserta: $data['identity']['status_peserta'],
-            alamat: $data['address']['alamat'],
-            regionId: $data['address']['region_id'],
-            rt: $data['address']['rt'],
-            rw: $data['address']['rw'],
-            namaAyah: $data['parents']['nama_ayah'],
-            namaIbu: $data['parents']['nama_ibu'],
-            pekerjaanAyah: $data['parents']['pekerjaan_ayah'],
-            pekerjaanIbu: $data['parents']['pekerjaan_ibu'],
-            sekolahAsal: $data['education']['sekolah_asal'],
-            nisAsal: $data['education']['nis_asal'],
-            tahunLulus: $data['education']['tahun_lulus']
+            nisn: (string) $data['identity']['nisn'],
+            nik: (string) $data['identity']['nik'],
+            nama: (string) $data['identity']['nama'],
+            tempatLahir: $data['identity']['tempat_lahir'] ?? null,
+            tanggalLahir: isset($data['identity']['tanggal_lahir'])
+                ? \Illuminate\Support\Carbon::parse($data['identity']['tanggal_lahir'])
+                : null,
+            jenisKelamin: (string) ($data['identity']['jenis_kelamin'] ?? 'L'),
+            agama: $data['identity']['agama'] ?? null,
+            sekolahAsal: $data['education']['sekolah_asal'] ?? null,
+            tahunLulus: isset($data['education']['tahun_lulus'])
+                ? (string) $data['education']['tahun_lulus']
+                : null,
+            alamat: $data['address']['alamat'] ?? null,
+            namaAyah: $data['parents']['nama_ayah'] ?? null,
+            namaIbu: $data['parents']['nama_ibu'] ?? null,
+            rt: $data['address']['rt'] ?? null,
+            rw: $data['address']['rw'] ?? null,
         );
     }
 }

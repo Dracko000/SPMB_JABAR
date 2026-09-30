@@ -10,11 +10,12 @@ class Student extends Model
     protected $fillable = [
         'nisn', 'nik', 'nama', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama',
         'nilai_prestasi', 'jarak_domisili_km', 'status_peserta', 'source', 'school_id',
+        'identity_hash', 'identity_bound_at',
     ];
 
     protected function casts(): array
     {
-        return ['tanggal_lahir' => 'date'];
+        return ['tanggal_lahir' => 'date', 'identity_bound_at' => 'datetime'];
     }
 
     public function user()

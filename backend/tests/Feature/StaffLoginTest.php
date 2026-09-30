@@ -44,16 +44,32 @@ it('guest hitting an auth route is redirected to login, not 500', function () {
         ->assertRedirect('/login');
 });
 
-it('signs in a pendaftar via NISN (NISN-as-password)', function () {
+it('signs in a demo pendaftar via NISN (NISN-as-password, akun demo_login)', function () {
     $student = Student::query()->firstOrFail();
     $user = User::factory()->create([
         'role' => 'pendaftar',
         'student_id' => $student->id,
         'password' => 'secret',
+        'demo_login' => true,
     ]);
 
     $this->post('/login', ['identifier' => $student->nisn, 'password' => $student->nisn])
         ->assertRedirect('/dashboard');
 
     $this->assertAuthenticatedAs($user);
+});
+
+it('rejects NISN-as-password for a pendaftar account that is not flagged demo_login', function () {
+    $student = Student::query()->firstOrFail();
+    User::factory()->create([
+        'role' => 'pendaftar',
+        'student_id' => $student->id,
+        'password' => 'secret',
+        'demo_login' => false,
+    ]);
+
+    $this->post('/login', ['identifier' => $student->nisn, 'password' => $student->nisn])
+        ->assertSessionHasErrors('identifier');
+
+    $this->assertGuest();
 });

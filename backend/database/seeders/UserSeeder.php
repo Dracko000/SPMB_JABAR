@@ -69,6 +69,7 @@ class UserSeeder extends Seeder
                     'name' => 'Fitri Handayani (Demo)',
                     'password' => $demoStudent->nisn,
                     'role' => 'pendaftar',
+                    'demo_login' => true,
                     'role_region_id' => $bandung?->id,
                     'school_id' => null,
                     'student_id' => $demoStudent->id,

@@ -6,9 +6,10 @@ use App\Models\Address;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,19 +62,29 @@ class SmpController extends Controller
             'alamat' => $request->alamat,
         ]);
 
-        // 2. Create User account for the student to login
+        // 2. Create User account for the student to login.
+        //    PENTING: password dibuat ACAK — NISN bukan kredensial. Siswa
+        //    masuk lewat alur NISN → OTP (bukti kepemilikan berganda), bukan
+        //    dengan NISN sebagai kata sandi (pola itu hanya untuk akun demo).
         $user = User::create([
             'name' => $student->nama,
             'email' => $request->email,
-            'password' => Hash::make($request->nisn), // Default password is NISN
+            'password' => Str::random(32),
             'role' => 'pendaftar',
+            'demo_login' => false,
             'email_verified_at' => now(),
         ]);
 
-        // 3. Link User to Student so the pendaftar can log in with NISN
+        // 3. Link User to Student so the pendaftar can claim the account via OTP.
         $user->update(['student_id' => $student->id]);
 
-        return back()->with('flash', ['success' => 'Siswa lulusan berhasil didaftarkan.']);
+        Audit::log('smp.student.intake', [
+            'student_id' => $student->id,
+            'nisn' => $student->nisn,
+            'by' => $request->user()->email,
+        ], $student);
+
+        return back()->with('flash', ['success' => 'Siswa lulusan berhasil didaftarkan. Akun diaktifkan siswa lewat NISN → OTP.']);
     }
 
     public function destroyStudent(Student $student, Request $request): RedirectResponse

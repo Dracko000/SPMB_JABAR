@@ -25,6 +25,10 @@ class AuthFlow
 
     /**
      * Step 1 — validate NISN, read student via gateway, and sync to local DB.
+     * Data identitas (nik/nama/TTL) TIDAK pernah menimpa secara diam-diam
+     * setelah identitas dikunci (identity_hash): jika gateway mengembalikan
+     * nik/TTL yang berbeda dari yang terikat, sinkron diblokir & dicatat
+     * sebagai drift (anti-pemalsuan rantai NISN→NIK).
      *
      * @throws StudentNotFoundException
      */
@@ -32,10 +36,26 @@ class AuthFlow
     {
         $record = $this->gateway->lookupByNisn($nisn);
 
-        // Sync to local DB to ensure "One Data" principle. Note: StudentRecord
-        // carries only what the gateway returns (no status_peserta, nis_asal,
-        // pekerjaan or region in the value object) — those stay on their
-        // defaults / null.
+        $student = Student::where('nisn', $nisn)->first();
+
+        // Identitas terkunci? Maka isi gateway harus persis cocok dengan data
+        // yang dikunci saat akun diklaim. Kalau tidak → drift: jangan menulis
+        // apa pun dari sumber yang tidak konsisten.
+        if ($student && $student->identity_hash && ! $this->identityMatches($student, $record)) {
+            Audit::log('identity.drift.detected', [
+                'student_id' => $student->id,
+                'nisn' => $nisn,
+                'stored_hash' => $student->identity_hash,
+                'gateway_nik' => substr((string) $record->nik, 0, 4).'••••••••••••',
+                'gateway_tanggal_lahir' => $record->tanggalLahir?->format('Y-m-d'),
+                'action' => 'identity_sync_blocked',
+            ], $student);
+
+            return $record;
+        }
+
+        // Sinkron aman: student baru (seed/mock, belum terkunci) atau data
+        // gateway identik dengan identitas terkunci.
         $student = Student::updateOrCreate(
             ['nisn' => $record->nisn],
             [
@@ -77,6 +97,49 @@ class AuthFlow
         Audit::log('auth.nisn.lookup', ['nisn' => $nisn, 'found' => true, 'synced' => true]);
 
         return $record;
+    }
+
+    /** Sidik jari identitas: sha256 dari (nisn|nik|tanggal_lahir). */
+    public function identityFingerprint(string $nisn, string $nik, ?\Illuminate\Support\Carbon $tanggalLahir): string
+    {
+        $dob = $tanggalLahir?->format('Y-m-d') ?? '';
+
+        return hash('sha256', strtolower(trim($nisn)).'|'.trim($nik).'|'.$dob);
+    }
+
+    /** Apakah record gateway identik dengan identitas yang dikunci? */
+    private function identityMatches(Student $student, StudentRecord $record): bool
+    {
+        return hash_equals(
+            (string) $student->identity_hash,
+            $this->identityFingerprint($record->nisn, $record->nik, $record->tanggalLahir),
+        );
+    }
+
+    /**
+     * Kunci (bind) identitas siswa pada saat akun pertamakali diklaim lewat
+     * OTP. Setelah ini, perubahan nik/TTL dari sumber mana pun terdeteksi
+     * sebagai drift dan tidak bisa menimpa data asli.
+     */
+    private function bindIdentity(Student $student): void
+    {
+        if ($student->identity_hash) {
+            return;
+        }
+
+        $student->update([
+            'identity_hash' => $this->identityFingerprint(
+                $student->nisn,
+                $student->nik,
+                $student->tanggal_lahir,
+            ),
+            'identity_bound_at' => now(),
+        ]);
+
+        Audit::log('identity.bound', [
+            'student_id' => $student->id,
+            'nisn' => $student->nisn,
+        ], $student);
     }
 
     /**
@@ -158,6 +221,10 @@ class AuthFlow
                 'role' => 'pendaftar',
             ],
         );
+
+        // Kunci rantai identitas saat akun pertamakali diklaim: sekali
+        // terikat, data (nik/TTL) tidak dapat diubah tanpa terdeteksi.
+        $this->bindIdentity($student);
 
         Audit::log('auth.otp.verified', ['nisn' => $nisn, 'student_id' => $student->id], $student);
 
